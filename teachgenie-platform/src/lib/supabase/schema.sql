@@ -120,10 +120,23 @@ ALTER TABLE public.chat_rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.message_notifications ENABLE ROW LEVEL SECURITY;
 
+-- First, let's drop the existing policies
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Tutor profiles are viewable by everyone" ON public.tutor_profiles;
+DROP POLICY IF EXISTS "Tutors can update their own profile" ON public.tutor_profiles;
+DROP POLICY IF EXISTS "Users can view their own sessions" ON public.sessions;
+DROP POLICY IF EXISTS "Users can create sessions" ON public.sessions;
+DROP POLICY IF EXISTS "Reviews are viewable by everyone" ON public.reviews;
+DROP POLICY IF EXISTS "Students can create reviews" ON public.reviews;
+DROP POLICY IF EXISTS "Users can view their own chat rooms" ON public.chat_rooms;
+DROP POLICY IF EXISTS "Users can view their own messages" ON public.chat_messages;
+
+-- Now create the correct policies
 -- Profiles policies
-CREATE POLICY "Public profiles are viewable by everyone"
+CREATE POLICY "Users can view their own profile"
   ON public.profiles FOR SELECT
-  USING (true);
+  USING (auth.uid() = id);
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
@@ -138,25 +151,61 @@ CREATE POLICY "Tutors can update their own profile"
   ON public.tutor_profiles FOR UPDATE
   USING (auth.uid() = id);
 
+-- Subjects policies
+CREATE POLICY "Subjects are viewable by everyone"
+  ON public.subjects FOR SELECT
+  USING (true);
+
+-- Tutor subjects policies
+CREATE POLICY "Tutor subjects are viewable by everyone"
+  ON public.tutor_subjects FOR SELECT
+  USING (true);
+
+CREATE POLICY "Tutors can manage their own subjects"
+  ON public.tutor_subjects FOR ALL
+  USING (auth.uid() = tutor_id);
+
 -- Sessions policies
 CREATE POLICY "Users can view their own sessions"
   ON public.sessions FOR SELECT
   USING (auth.uid() = tutor_id OR auth.uid() = student_id);
 
-CREATE POLICY "Users can create sessions"
+CREATE POLICY "Students can create sessions"
   ON public.sessions FOR INSERT
   WITH CHECK (auth.uid() = student_id);
+
+CREATE POLICY "Tutors can update their sessions"
+  ON public.sessions FOR UPDATE
+  USING (auth.uid() = tutor_id);
+
+-- Session payments policies
+CREATE POLICY "Users can view their own payments"
+  ON public.session_payments FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.sessions
+      WHERE sessions.id = session_payments.session_id
+      AND (sessions.tutor_id = auth.uid() OR sessions.student_id = auth.uid())
+    )
+  );
 
 -- Reviews policies
 CREATE POLICY "Reviews are viewable by everyone"
   ON public.reviews FOR SELECT
   USING (true);
 
-CREATE POLICY "Students can create reviews"
+CREATE POLICY "Students can create reviews for their sessions"
   ON public.reviews FOR INSERT
-  WITH CHECK (auth.uid() = student_id);
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.sessions
+      WHERE sessions.id = reviews.session_id
+      AND sessions.student_id = auth.uid()
+      AND sessions.status = 'completed'
+    )
+  );
 
--- Chat policies
+-- Chat rooms policies
 CREATE POLICY "Users can view their own chat rooms"
   ON public.chat_rooms FOR SELECT
   USING (
@@ -167,7 +216,8 @@ CREATE POLICY "Users can view their own chat rooms"
     )
   );
 
-CREATE POLICY "Users can view their own messages"
+-- Chat messages policies
+CREATE POLICY "Users can view messages in their chat rooms"
   ON public.chat_messages FOR SELECT
   USING (
     EXISTS (
@@ -179,4 +229,27 @@ CREATE POLICY "Users can view their own messages"
         AND (sessions.tutor_id = auth.uid() OR sessions.student_id = auth.uid())
       )
     )
-  ); 
+  );
+
+CREATE POLICY "Users can send messages in their chat rooms"
+  ON public.chat_messages FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.chat_rooms
+      WHERE chat_rooms.id = chat_messages.chat_room_id
+      AND EXISTS (
+        SELECT 1 FROM public.sessions
+        WHERE sessions.id = chat_rooms.session_id
+        AND (sessions.tutor_id = auth.uid() OR sessions.student_id = auth.uid())
+      )
+    )
+  );
+
+-- Message notifications policies
+CREATE POLICY "Users can view their own notifications"
+  ON public.message_notifications FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own notifications"
+  ON public.message_notifications FOR UPDATE
+  USING (auth.uid() = user_id); 
