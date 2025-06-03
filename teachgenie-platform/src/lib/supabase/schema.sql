@@ -142,6 +142,10 @@ CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
 
+CREATE POLICY "Enable insert for authenticated users only"
+  ON public.profiles FOR INSERT
+  WITH CHECK (true);
+
 -- Tutor profiles policies
 CREATE POLICY "Tutor profiles are viewable by everyone"
   ON public.tutor_profiles FOR SELECT
