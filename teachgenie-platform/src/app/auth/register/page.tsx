@@ -28,7 +28,8 @@ export default function RegisterPage() {
         userType,
       })
     } catch (error) {
-      setError('Failed to create account')
+      console.error('Registration error:', error)
+      setError(error instanceof Error ? error.message : 'Failed to create account')
     } finally {
       setIsLoading(false)
     }

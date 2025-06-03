@@ -44,11 +44,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-    if (error) throw error
+    if (error) {
+      console.error('Sign in error:', error)
+      throw error
+    }
+    if (!data.user) {
+      throw new Error('No user data returned')
+    }
     router.push('/dashboard')
   }
 
@@ -61,19 +67,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userType: 'student' | 'tutor'
     }
   ) => {
-    const { error: authError } = await supabase.auth.signUp({
+    // Create auth user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
     })
     if (authError) throw authError
+    if (!authData.user) throw new Error('Failed to create user')
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('User not found')
-
+    // Create profile
     const { error: profileError } = await supabase
       .from('profiles')
       .insert({
-        id: user.id,
+        id: authData.user.id,
         first_name: userData.firstName,
         last_name: userData.lastName,
         user_type: userData.userType,
@@ -81,11 +87,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
     if (profileError) throw profileError
 
+    // If user is a tutor, create tutor profile
     if (userData.userType === 'tutor') {
       const { error: tutorError } = await supabase
         .from('tutor_profiles')
         .insert({
-          id: user.id,
+          id: authData.user.id,
           is_verified: false,
         })
       if (tutorError) throw tutorError

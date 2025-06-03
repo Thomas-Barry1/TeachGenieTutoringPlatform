@@ -21,7 +21,12 @@ export default function LoginPage() {
     try {
       await signIn(email, password)
     } catch (error) {
-      setError('Invalid email or password')
+      console.error('Login error:', error)
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('Invalid email or password')
+      }
     } finally {
       setIsLoading(false)
     }
