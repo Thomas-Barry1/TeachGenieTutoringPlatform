@@ -238,7 +238,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Clear `.next` cache if build issues occur
    - Check TypeScript types for errors
 
-## Testing
+## Testing (Planned)
 
 1. **Unit Tests**
    - Component testing with Jest
@@ -253,4 +253,80 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 3. **E2E Tests**
    - User journeys
    - Critical paths
-   - Error scenarios 
+   - Error scenarios
+
+## LLM Rules & Context
+
+### Project Context
+- This is a tutoring platform built with Next.js 14 and Supabase
+- The platform connects students with tutors for online tutoring sessions
+- All database operations must respect RLS policies
+- Authentication is handled through Supabase Auth
+
+### Important Rules
+1. **Database Operations**
+   - Always check RLS policies before suggesting database changes
+   - Never expose sensitive data in queries
+   - Use proper TypeScript types for all database operations
+
+2. **Authentication**
+   - Respect user roles (student/tutor)
+   - Handle authentication errors gracefully
+   - Maintain proper session management
+
+3. **Security**
+   - Never suggest exposing API keys or sensitive credentials
+   - Always validate user input
+   - Follow Supabase security best practices
+
+4. **Code Style**
+   - Use TypeScript for all new code
+   - Follow Next.js 14 best practices
+   - Maintain consistent error handling patterns
+
+5. **Feature Implementation**
+   - Check existing implementations before suggesting new ones
+   - Consider both student and tutor perspectives
+   - Maintain platform scalability
+
+### Common Pitfalls to Avoid
+1. **Authentication**
+   - Don't assume user is authenticated
+   - Always check user roles before operations
+   - Handle token expiration properly
+
+2. **Database**
+   - Don't bypass RLS policies
+   - Don't expose sensitive data
+   - Don't make unnecessary database calls
+
+3. **Performance**
+   - Don't make unnecessary API calls
+   - Don't load unnecessary data
+   - Don't block the main thread
+
+4. **Security**
+   - Don't expose environment variables
+   - Don't trust client-side data
+   - Don't skip input validation
+
+### Best Practices
+1. **Code Organization**
+   - Keep components focused and reusable
+   - Use proper TypeScript types
+   - Follow consistent naming conventions
+
+2. **Error Handling**
+   - Provide clear error messages
+   - Log errors appropriately
+   - Handle edge cases gracefully
+
+3. **State Management**
+   - Use React Context for global state
+   - Keep component state local when possible
+   - Handle loading and error states properly
+
+4. **Testing (When Implemented)**
+   - Write tests for critical paths
+   - Test error scenarios
+   - Maintain good test coverage 
