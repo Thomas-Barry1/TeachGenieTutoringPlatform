@@ -256,4 +256,36 @@ CREATE POLICY "Users can view their own notifications"
 
 CREATE POLICY "Users can update their own notifications"
   ON public.message_notifications FOR UPDATE
-  USING (auth.uid() = user_id); 
+  USING (auth.uid() = user_id);
+
+-- Enable RLS on tutor_profiles table
+ALTER TABLE public.tutor_profiles ENABLE ROW LEVEL SECURITY;
+
+-- Create policy to allow users to create their own tutor profile
+CREATE POLICY "Users can create their own tutor profile"
+ON public.tutor_profiles
+FOR INSERT
+TO authenticated
+WITH CHECK (auth.uid() = id);
+
+-- Create policy to allow users to view any tutor profile
+CREATE POLICY "Anyone can view tutor profiles"
+ON public.tutor_profiles
+FOR SELECT
+TO authenticated
+USING (true);
+
+-- Create policy to allow users to update their own tutor profile
+CREATE POLICY "Users can update their own tutor profile"
+ON public.tutor_profiles
+FOR UPDATE
+TO authenticated
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
+
+-- Create policy to allow users to delete their own tutor profile
+CREATE POLICY "Users can delete their own tutor profile"
+ON public.tutor_profiles
+FOR DELETE
+TO authenticated
+USING (auth.uid() = id); 
