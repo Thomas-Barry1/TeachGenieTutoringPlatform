@@ -9,6 +9,28 @@
 - **Deployment**: Vercel
 - **Styling**: Tailwind CSS
 
+## Project Setup
+
+### Environment Variables
+Required environment variables in `.env.local`:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Configuration Files
+- `next.config.js` - Next.js configuration
+- `postcss.config.js` - PostCSS configuration for Tailwind
+- `tailwind.config.ts` - Tailwind CSS configuration
+- `tsconfig.json` - TypeScript configuration
+- `eslint.config.mjs` - ESLint configuration
+
+### Middleware
+- `src/middleware.ts` - Handles authentication and route protection
+- Protects routes based on user type and authentication status
+- Redirects unauthenticated users to login
+- Redirects authenticated users away from auth pages
+
 ## Project Structure
 
 ### Key Directories
@@ -17,6 +39,8 @@
 - `/src/contexts` - React context providers
 - `/src/lib` - Utility functions and configurations
 - `/src/types` - TypeScript type definitions
+- `/src/styles` - Global styles and Tailwind imports
+- `/public` - Static assets
 
 ### Important Files
 - `src/lib/supabase/schema.sql` - Database schema and RLS policies
@@ -24,6 +48,9 @@
 - `src/contexts/AuthContext.tsx` - Authentication state management
 - `src/types/database.ts` - Database type definitions
 - `src/types/supabase.ts` - Supabase client type definitions
+- `src/middleware.ts` - Route protection and authentication
+- `src/app/layout.tsx` - Root layout with providers
+- `src/app/page.tsx` - Landing page
 
 ## Database Schema
 
@@ -192,4 +219,38 @@
 2. **Code**
    - Regular dependency updates
    - Code quality checks
-   - Documentation updates 
+   - Documentation updates
+
+## Common Issues & Solutions
+
+1. **Authentication**
+   - Ensure environment variables are set correctly
+   - Check RLS policies if data access fails
+   - Verify user roles in middleware
+
+2. **Database**
+   - Use proper foreign key relationships
+   - Check RLS policies for access issues
+   - Monitor query performance
+
+3. **Development**
+   - Run `npm install` after pulling changes
+   - Clear `.next` cache if build issues occur
+   - Check TypeScript types for errors
+
+## Testing
+
+1. **Unit Tests**
+   - Component testing with Jest
+   - API route testing
+   - Utility function testing
+
+2. **Integration Tests**
+   - Authentication flow
+   - Session booking
+   - Payment processing
+
+3. **E2E Tests**
+   - User journeys
+   - Critical paths
+   - Error scenarios 
