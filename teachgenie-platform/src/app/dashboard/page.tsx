@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
+import TutorSubjectManager from '@/components/TutorSubjectManager'
 
 type Profile = {
   id: string
@@ -93,7 +94,9 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-gray-500">
             Manage your tutoring sessions and availability here.
           </p>
-          {/* Add tutor-specific content here */}
+          <div className="mt-6">
+            <TutorSubjectManager tutorId={profile.id} />
+          </div>
         </div>
       )}
 
