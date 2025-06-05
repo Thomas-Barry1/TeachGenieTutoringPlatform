@@ -126,7 +126,8 @@ DROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;
 DROP POLICY IF EXISTS "Tutor profiles are viewable by everyone" ON public.tutor_profiles;
 DROP POLICY IF EXISTS "Tutors can update their own profile" ON public.tutor_profiles;
 DROP POLICY IF EXISTS "Users can view their own sessions" ON public.sessions;
-DROP POLICY IF EXISTS "Users can create sessions" ON public.sessions;
+DROP POLICY IF EXISTS "Students can create sessions" ON public.sessions;
+DROP POLICY IF EXISTS "Tutors can update their sessions" ON public.sessions;
 DROP POLICY IF EXISTS "Reviews are viewable by everyone" ON public.reviews;
 DROP POLICY IF EXISTS "Students can create reviews" ON public.reviews;
 DROP POLICY IF EXISTS "Users can view their own chat rooms" ON public.chat_rooms;
@@ -137,6 +138,15 @@ DROP POLICY IF EXISTS "Users can view their own messages" ON public.chat_message
 CREATE POLICY "Users can view their own profile"
   ON public.profiles FOR SELECT
   USING (auth.uid() = id);
+
+CREATE POLICY "Users can view tutor profiles"
+  ON public.profiles FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.tutor_profiles
+      WHERE tutor_profiles.id = profiles.id
+    )
+  );
 
 CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE
@@ -170,17 +180,46 @@ CREATE POLICY "Tutors can manage their own subjects"
   USING (auth.uid() = tutor_id);
 
 -- Sessions policies
+DROP POLICY IF EXISTS "Users can view their own sessions" ON public.sessions;
+DROP POLICY IF EXISTS "Students can create sessions" ON public.sessions;
+DROP POLICY IF EXISTS "Tutors can update their sessions" ON public.sessions;
+
+-- Create a simpler, more permissive policy for viewing sessions
 CREATE POLICY "Users can view their own sessions"
   ON public.sessions FOR SELECT
-  USING (auth.uid() = tutor_id OR auth.uid() = student_id);
+  USING (
+    auth.uid() = tutor_id OR 
+    auth.uid() = student_id
+  );
 
 CREATE POLICY "Students can create sessions"
   ON public.sessions FOR INSERT
-  WITH CHECK (auth.uid() = student_id);
+  WITH CHECK (
+    auth.uid() = student_id AND
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.user_type = 'student'
+    )
+  );
 
 CREATE POLICY "Tutors can update their sessions"
   ON public.sessions FOR UPDATE
-  USING (auth.uid() = tutor_id);
+  USING (
+    auth.uid() = tutor_id AND
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE profiles.id = auth.uid()
+      AND profiles.user_type = 'tutor'
+    )
+  );
+
+CREATE POLICY "Users can delete their own sessions"
+  ON public.sessions FOR DELETE
+  USING (
+    (auth.uid() = tutor_id OR auth.uid() = student_id) AND
+    status = 'scheduled'
+  );
 
 -- Session payments policies
 CREATE POLICY "Users can view their own payments"

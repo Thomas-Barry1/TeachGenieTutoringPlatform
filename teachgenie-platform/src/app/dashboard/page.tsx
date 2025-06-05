@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import TutorSubjectManager from '@/components/TutorSubjectManager'
+import SessionsPage from '@/app/sessions/page'
 
 type Profile = {
   id: string
@@ -109,6 +110,12 @@ export default function DashboardPage() {
           {/* Add student-specific content here */}
         </div>
       )}
+
+      {/* Add Sessions section for both user types */}
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">My Sessions</h2>
+        <SessionsPage />
+      </div>
     </div>
   )
 } 

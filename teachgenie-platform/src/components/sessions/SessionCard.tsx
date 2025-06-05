@@ -22,7 +22,7 @@ interface SessionCardProps {
 export default function SessionCard({ session, userType, onStatusChange }: SessionCardProps) {
   const startTime = new Date(session.start_time)
   const endTime = new Date(session.end_time)
-  const otherParty = userType === 'student' ? session.tutor : session.student
+  const otherParty = userType === 'student' ? session.tutor?.profile : session.student?.profile
 
   const getStatusColor = (status: Session['status']) => {
     switch (status) {
@@ -43,7 +43,7 @@ export default function SessionCard({ session, userType, onStatusChange }: Sessi
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-lg font-semibold">
-              {otherParty?.profile.first_name} {otherParty?.profile.last_name}
+              {otherParty?.first_name} {otherParty?.last_name}
             </h3>
             <p className="text-gray-600">{session.subject.name}</p>
           </div>

@@ -5,13 +5,14 @@ import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
 
 type Tutor = Database['public']['Tables']['tutor_profiles']['Row'] & {
-  profile: Database['public']['Tables']['profiles']['Row']
+  profile: Database['public']['Tables']['profiles']['Row'] | null
   subjects: Database['public']['Tables']['subjects']['Row'][]
 }
 
 export default function TutorsPage() {
   const [tutors, setTutors] = useState<Tutor[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSubject, setSelectedSubject] = useState<string>('')
   const [subjects, setSubjects] = useState<Database['public']['Tables']['subjects']['Row'][]>([])
@@ -24,7 +25,12 @@ export default function TutorsPage() {
       .from('subjects')
       .select('*')
       .order('name')
-      .then(({ data: subjectsData }) => {
+      .then(({ data: subjectsData, error: subjectsError }) => {
+        if (subjectsError) {
+          console.error('Error fetching subjects:', subjectsError)
+          setError('Failed to load subjects')
+          return
+        }
         if (subjectsData) {
           setSubjects(subjectsData)
         }
@@ -40,17 +46,26 @@ export default function TutorsPage() {
           subject:subjects(*)
         )
       `)
-      .then(({ data: tutorsData, error }) => {
-        if (error) {
-          console.error('Error fetching tutors:', error)
+      .then(({ data: tutorsData, error: tutorsError }) => {
+        if (tutorsError) {
+          console.error('Error fetching tutors:', tutorsError)
+          setError('Failed to load tutors')
+          return
+        }
+
+        if (!tutorsData) {
+          setTutors([])
+          setLoading(false)
           return
         }
 
         // Transform the data to match our Tutor type
-        const transformedTutors = tutorsData.map(tutor => ({
-          ...tutor,
-          subjects: tutor.subjects.map((s: any) => s.subject)
-        }))
+        const transformedTutors = tutorsData
+          .filter(tutor => tutor.profile !== null) // Filter out tutors without profiles
+          .map(tutor => ({
+            ...tutor,
+            subjects: tutor.subjects?.map((s: any) => s.subject) || []
+          }))
 
         setTutors(transformedTutors)
         setLoading(false)
@@ -58,6 +73,8 @@ export default function TutorsPage() {
   }, [])
 
   const filteredTutors = tutors.filter(tutor => {
+    if (!tutor.profile) return false
+
     const matchesSearch = searchQuery === '' || 
       tutor.profile.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tutor.profile.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -73,6 +90,14 @@ export default function TutorsPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium text-red-600">{error}</h3>
       </div>
     )
   }
@@ -116,7 +141,7 @@ export default function TutorsPage() {
                 <div className="h-16 w-16 rounded-full bg-gray-200" />
                 <div>
                   <h3 className="text-lg font-semibold">
-                    {tutor.profile.first_name} {tutor.profile.last_name}
+                    {tutor.profile?.first_name} {tutor.profile?.last_name}
                   </h3>
                   <p className="text-gray-600">
                     {tutor.hourly_rate ? `$${tutor.hourly_rate}/hour` : 'Rate not set'}

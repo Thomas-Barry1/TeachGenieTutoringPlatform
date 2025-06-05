@@ -23,34 +23,68 @@ export default function SessionsPage() {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming')
 
+  console.log('SessionsPage mounted')
+  console.log('Current user:', user)
+
   useEffect(() => {
-    if (!user) return
+    console.log('useEffect triggered')
+    console.log('User in effect:', user)
+
+    if (!user) {
+      console.log('No user found, returning early')
+      return
+    }
 
     const fetchSessions = async () => {
+      console.log('Starting fetchSessions')
       try {
         const supabase = createClient()
-        const { data: profile } = await supabase
+        console.log('Current user ID:', user.id)
+
+        // First, let's check if there are any sessions at all
+        const { count, error: countError } = await supabase
+          .from('sessions')
+          .select('*', { count: 'exact', head: true })
+
+        if (countError) {
+          console.error('Session count error:', countError)
+        } else {
+          console.log('Total sessions in database:', count)
+        }
+
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('user_type')
           .eq('id', user.id)
           .single()
 
-        if (!profile) throw new Error('Profile not found')
+        if (profileError) {
+          console.error('Profile fetch error:', profileError)
+          throw profileError
+        }
+
+        if (!profile) {
+          console.error('No profile found for user:', user.id)
+          throw new Error('Profile not found')
+        }
+
+        console.log('User profile:', profile)
 
         const now = new Date().toISOString()
+        console.log('Current time:', now)
+
         const query = supabase
           .from('sessions')
           .select(`
             *,
             tutor:tutor_id (
+              *,
               profile:profiles (*)
             ),
-            student:student_id (
-              profile:profiles (*)
-            ),
+            student:student_id (*),
             subject:subject_id (*)
           `)
-          .eq(profile.user_type === 'tutor' ? 'tutor_id' : 'student_id', user.id)
+          .or(`tutor_id.eq.${user.id},student_id.eq.${user.id}`)
           .order('start_time', { ascending: filter === 'upcoming' })
 
         if (filter === 'upcoming') {
@@ -59,11 +93,19 @@ export default function SessionsPage() {
           query.lt('start_time', now)
         }
 
+        console.log('Query filter:', filter)
+
         const { data, error } = await query
 
-        if (error) throw error
+        if (error) {
+          console.error('Session fetch error:', error)
+          throw error
+        }
+        
+        console.log('Raw session data:', data)
         setSessions(data || [])
       } catch (err) {
+        console.error('Session fetch error:', err)
         setError(err instanceof Error ? err.message : 'Failed to load sessions')
       } finally {
         setLoading(false)
