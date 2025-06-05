@@ -12,7 +12,7 @@
 ## Project Setup
 
 ### Environment Variables
-Required environment variables in `.env`:
+Required environment variables in `.env.local`:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
