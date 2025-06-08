@@ -50,6 +50,19 @@ interface ChatMessageResponse {
   };
 }
 
+interface UserProfile {
+  id: string;
+  user_type: 'student' | 'tutor';
+}
+
+interface TutorSubject {
+  subject_id: string;
+  subjects: {
+    id: string;
+    name: string;
+  };
+}
+
 export default function ConversationPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -57,8 +70,15 @@ export default function ConversationPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
   const [otherParticipant, setOtherParticipant] = useState<ChatParticipant | null>(null);
   const [newMessage, setNewMessage] = useState('');
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTime, setBookingTime] = useState('');
+  const [bookingDuration, setBookingDuration] = useState(60); // Default 60 minutes
+  const [bookingSubject, setBookingSubject] = useState('');
+  const [availableSubjects, setAvailableSubjects] = useState<{ id: string; name: string }[]>([]);
 
   const supabase = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -69,6 +89,17 @@ export default function ConversationPage() {
     async function fetchUser() {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id || null);
+      
+      if (user?.id) {
+        // Fetch user profile to check if they're a tutor
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, user_type')
+          .eq('id', user.id)
+          .single();
+        
+        setCurrentUserProfile(profile);
+      }
     }
     fetchUser();
   }, [supabase]);
@@ -197,6 +228,32 @@ export default function ConversationPage() {
     fetchConversation();
   }, [supabase, currentUserId, id, router]);
 
+  useEffect(() => {
+    async function fetchTutorSubjects() {
+      if (currentUserProfile?.user_type === 'tutor') {
+        const { data: subjects } = await supabase
+          .from('tutor_subjects')
+          .select(`
+            subject_id,
+            subjects (
+              id,
+              name
+            )
+          `)
+          .eq('tutor_id', currentUserId)
+          .returns<TutorSubject[]>();
+
+        if (subjects) {
+          setAvailableSubjects(subjects.map(s => ({
+            id: s.subjects.id,
+            name: s.subjects.name
+          })));
+        }
+      }
+    }
+    fetchTutorSubjects();
+  }, [currentUserProfile, currentUserId, supabase]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUserId || !id || !newMessage.trim()) return;
@@ -255,6 +312,42 @@ export default function ConversationPage() {
     }
   };
 
+  const handleBookSession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUserId || !otherParticipant || !bookingDate || !bookingTime || !bookingSubject) return;
+
+    try {
+      const startTime = new Date(`${bookingDate}T${bookingTime}`);
+      const endTime = new Date(startTime.getTime() + bookingDuration * 60000);
+
+      const { error: sessionError } = await supabase
+        .from('sessions')
+        .insert([
+          {
+            tutor_id: currentUserId,
+            student_id: otherParticipant.user_id,
+            subject_id: bookingSubject,
+            start_time: startTime.toISOString(),
+            end_time: endTime.toISOString(),
+            status: 'scheduled',
+            price: 0 // This should be calculated based on tutor's hourly rate
+          }
+        ]);
+
+      if (sessionError) throw sessionError;
+
+      setShowBookingModal(false);
+      // Reset form
+      setBookingDate('');
+      setBookingTime('');
+      setBookingDuration(60);
+      setBookingSubject('');
+    } catch (error) {
+      console.error('Error booking session:', error);
+      setError('Failed to book session');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -299,9 +392,19 @@ export default function ConversationPage() {
         <div className="bg-white rounded-lg shadow">
           {/* Header */}
           <div className="border-b p-4">
-            <h1 className="text-xl font-semibold">
-              Conversation with {otherParticipant?.profiles.first_name} {otherParticipant?.profiles.last_name}
-            </h1>
+            <div className="flex justify-between items-center">
+              <h1 className="text-xl font-semibold">
+                Conversation with {otherParticipant?.profiles.first_name} {otherParticipant?.profiles.last_name}
+              </h1>
+              {currentUserProfile?.user_type === 'tutor' && (
+                <button
+                  onClick={() => setShowBookingModal(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Book Session
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Messages */}
@@ -350,6 +453,83 @@ export default function ConversationPage() {
             </form>
           </div>
         </div>
+
+        {/* Booking Modal */}
+        {showBookingModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h2 className="text-xl font-semibold mb-4">Book a Session</h2>
+              <form onSubmit={handleBookSession}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Date</label>
+                    <input
+                      type="date"
+                      value={bookingDate}
+                      onChange={(e) => setBookingDate(e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Time</label>
+                    <input
+                      type="time"
+                      value={bookingTime}
+                      onChange={(e) => setBookingTime(e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
+                    <select
+                      value={bookingDuration}
+                      onChange={(e) => setBookingDuration(Number(e.target.value))}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value={30}>30 minutes</option>
+                      <option value={60}>1 hour</option>
+                      <option value={90}>1.5 hours</option>
+                      <option value={120}>2 hours</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Subject</label>
+                    <select
+                      value={bookingSubject}
+                      onChange={(e) => setBookingSubject(e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Select a subject</option>
+                      {availableSubjects.map(subject => (
+                        <option key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowBookingModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  >
+                    Book Session
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

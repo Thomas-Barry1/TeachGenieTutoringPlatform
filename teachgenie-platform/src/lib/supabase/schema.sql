@@ -236,11 +236,11 @@ CREATE POLICY "View own sessions"
 CREATE POLICY "Create new session"
   ON public.sessions FOR INSERT
   WITH CHECK (
-    auth.uid() = student_id AND
+    auth.uid() = tutor_id AND
     EXISTS (
       SELECT 1 FROM public.profiles
       WHERE profiles.id = auth.uid()
-      AND profiles.user_type = 'student'
+      AND profiles.user_type = 'tutor'
     )
   );
 
