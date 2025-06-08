@@ -105,7 +105,13 @@ export default function ConversationPage() {
 
         // Get the other participant
         const other = participants?.find(p => p.user_id !== currentUserId);
+        console.log('Participants data:', participants);
+        console.log('Other participant:', other);
         if (other) {
+          console.log('Setting other participant with data:', {
+            user_id: other.user_id,
+            profiles: other.user
+          });
           setOtherParticipant({
             user_id: other.user_id,
             profiles: other.user

@@ -147,6 +147,17 @@ CREATE POLICY "View verified tutors"
     )
   );
 
+CREATE POLICY "View chat participant profiles"
+  ON public.profiles FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.chat_participants cp1
+      JOIN public.chat_participants cp2 ON cp1.chat_room_id = cp2.chat_room_id
+      WHERE cp1.user_id = auth.uid()
+      AND cp2.user_id = profiles.id
+    )
+  );
+
 CREATE POLICY "Update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id);
