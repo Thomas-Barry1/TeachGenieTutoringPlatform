@@ -89,6 +89,22 @@ create table public.session_payments (
 );
 ```
 
+#### Session Booking Flow
+1. Tutors can initiate session booking from:
+   - Student profiles
+   - Chat conversations
+   - Direct session creation
+2. Session booking includes:
+   - Date and time selection
+   - Duration (30min to 2 hours)
+   - Subject selection (from tutor's available subjects)
+   - Price calculation based on tutor's hourly rate
+3. Security:
+   - Only tutors can create sessions
+   - Tutors can only create sessions where they are the tutor
+   - Students can view sessions they are part of
+   - Tutors can view and manage their own sessions
+
 ### 4. Reviews & Ratings
 #### Database Schema
 ```sql

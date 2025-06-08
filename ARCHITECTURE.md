@@ -137,8 +137,32 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 
 5. Sessions
    - Users can view their own sessions
-   - Students can create sessions
-   - Tutors can update their sessions
+   - Only tutors can create sessions
+   - Tutors can only create sessions where they are the tutor
+   - Tutors can update their own sessions
+
+## Session Management
+
+### Session Creation
+1. **Permissions**
+   - Only tutors can create sessions
+   - Tutors must be creating a session where they are the tutor
+   - Tutors must have a verified tutor profile
+
+2. **Session Booking Flow**
+   - Tutors can initiate booking from chat or student profiles
+   - Session details include:
+     - Date and time
+     - Duration
+     - Subject (from tutor's available subjects)
+     - Price (based on tutor's hourly rate)
+   - Students receive notification of new session
+   - Students can view but not modify session details
+
+3. **Session States**
+   - Scheduled: Initial state when created
+   - Completed: After session ends
+   - Cancelled: If session is cancelled
 
 ## Authentication Flow
 

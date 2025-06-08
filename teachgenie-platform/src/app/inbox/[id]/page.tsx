@@ -63,6 +63,11 @@ interface TutorSubject {
   };
 }
 
+interface TutorProfile {
+  id: string;
+  hourly_rate: number;
+}
+
 export default function ConversationPage() {
   const { id } = useParams();
   const router = useRouter();
@@ -77,8 +82,11 @@ export default function ConversationPage() {
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
   const [bookingDuration, setBookingDuration] = useState(60); // Default 60 minutes
+  const [bookingRate, setBookingRate] = useState<number>(0);
   const [bookingSubject, setBookingSubject] = useState('');
   const [availableSubjects, setAvailableSubjects] = useState<{ id: string; name: string }[]>([]);
+  const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null);
+  const [customDuration, setCustomDuration] = useState<string>('');
 
   const supabase = createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -254,6 +262,24 @@ export default function ConversationPage() {
     fetchTutorSubjects();
   }, [currentUserProfile, currentUserId, supabase]);
 
+  useEffect(() => {
+    async function fetchTutorProfile() {
+      if (currentUserProfile?.user_type === 'tutor' && currentUserId) {
+        const { data: profile } = await supabase
+          .from('tutor_profiles')
+          .select('id, hourly_rate')
+          .eq('id', currentUserId)
+          .single();
+        
+        if (profile) {
+          setTutorProfile(profile);
+          setBookingRate(profile.hourly_rate);
+        }
+      }
+    }
+    fetchTutorProfile();
+  }, [currentUserProfile, currentUserId, supabase]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUserId || !id || !newMessage.trim()) return;
@@ -318,7 +344,12 @@ export default function ConversationPage() {
 
     try {
       const startTime = new Date(`${bookingDate}T${bookingTime}`);
-      const endTime = new Date(startTime.getTime() + bookingDuration * 60000);
+      const duration = customDuration ? parseInt(customDuration) : bookingDuration;
+      const endTime = new Date(startTime.getTime() + duration * 60000);
+      
+      // Calculate price based on duration and rate
+      const hours = duration / 60;
+      const price = hours * bookingRate;
 
       const { error: sessionError } = await supabase
         .from('sessions')
@@ -330,7 +361,7 @@ export default function ConversationPage() {
             start_time: startTime.toISOString(),
             end_time: endTime.toISOString(),
             status: 'scheduled',
-            price: 0 // This should be calculated based on tutor's hourly rate
+            price: price
           }
         ]);
 
@@ -342,6 +373,7 @@ export default function ConversationPage() {
       setBookingTime('');
       setBookingDuration(60);
       setBookingSubject('');
+      setCustomDuration('');
     } catch (error) {
       console.error('Error booking session:', error);
       setError('Failed to book session');
@@ -482,17 +514,53 @@ export default function ConversationPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Duration (minutes)</label>
-                    <select
-                      value={bookingDuration}
-                      onChange={(e) => setBookingDuration(Number(e.target.value))}
+                    <label className="block text-sm font-medium text-gray-700">Duration</label>
+                    <div className="mt-1 space-y-2">
+                      <select
+                        value={customDuration ? 'custom' : bookingDuration.toString()}
+                        onChange={(e) => {
+                          if (e.target.value === 'custom') {
+                            setCustomDuration('');
+                          } else {
+                            setBookingDuration(Number(e.target.value));
+                            setCustomDuration('');
+                          }
+                        }}
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      >
+                        <option value="30">30 minutes</option>
+                        <option value="60">1 hour</option>
+                        <option value="90">1.5 hours</option>
+                        <option value="120">2 hours</option>
+                        <option value="custom">Custom duration</option>
+                      </select>
+                      {customDuration !== '' && (
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="number"
+                            value={customDuration}
+                            onChange={(e) => setCustomDuration(e.target.value)}
+                            min="15"
+                            step="15"
+                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            placeholder="Enter duration in minutes"
+                          />
+                          <span className="text-gray-500">minutes</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Hourly Rate ($)</label>
+                    <input
+                      type="number"
+                      value={bookingRate}
+                      onChange={(e) => setBookingRate(Number(e.target.value))}
+                      min="0"
+                      step="0.01"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    >
-                      <option value={30}>30 minutes</option>
-                      <option value={60}>1 hour</option>
-                      <option value={90}>1.5 hours</option>
-                      <option value={120}>2 hours</option>
-                    </select>
+                      required
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Subject</label>
@@ -509,6 +577,11 @@ export default function ConversationPage() {
                         </option>
                       ))}
                     </select>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-md">
+                    <p className="text-sm text-gray-600">
+                      Total Price: ${((customDuration ? parseInt(customDuration) : bookingDuration) / 60 * bookingRate).toFixed(2)}
+                    </p>
                   </div>
                 </div>
                 <div className="mt-6 flex justify-end space-x-3">
