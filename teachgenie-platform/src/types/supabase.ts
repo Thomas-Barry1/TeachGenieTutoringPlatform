@@ -41,17 +41,14 @@ export interface Database {
       chat_rooms: {
         Row: {
           id: string
-          session_id: string
           created_at: string
         }
         Insert: {
           id?: string
-          session_id: string
           created_at?: string
         }
         Update: {
           id?: string
-          session_id?: string
           created_at?: string
         }
       }

@@ -89,10 +89,27 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Includes ratings and comments
    - Links to sessions
 
-8. `chat_rooms` and `chat_messages`
-   - Real-time chat functionality
-   - Links to sessions
-   - Handles message notifications
+8. `chat_rooms`
+   - Stores chat room information
+   - Contains metadata like creation time
+   - Simple structure focused on message exchange
+
+9. `chat_participants`
+   - Manages the many-to-many relationship between users and chat rooms
+   - Tracks who is part of each chat room
+   - Essential for access control and RLS policies
+   - Enables proper user management in chat rooms
+
+10. `chat_messages`
+    - Stores individual messages
+    - Links to chat rooms and senders
+    - Tracks read status and timestamps
+    - Supports message history
+
+11. `message_notifications`
+    - Handles real-time notifications
+    - Tracks unread messages
+    - Manages notification preferences
 
 ## Security & Access Control
 

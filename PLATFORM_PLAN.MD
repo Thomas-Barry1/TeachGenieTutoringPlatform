@@ -111,7 +111,6 @@ create table public.reviews (
 -- Chat rooms
 create table public.chat_rooms (
   id uuid default uuid_generate_v4(),
-  session_id uuid references public.sessions,
   created_at timestamp with time zone default timezone('utc'::text, now()),
   primary key (id)
 );
@@ -525,4 +524,58 @@ create table public.message_notifications (
 - Loading animations
 - Empty states
 - Error states
-- Success states 
+- Success states
+
+## Messaging System
+
+### Direct Messaging
+- Students can message tutors directly from their profile
+- Messages are organized in chat rooms
+- Each chat room can have multiple participants
+- Messages support read receipts and timestamps
+- Real-time notifications for new messages
+
+### Chat Room Types
+1. **Direct Messages**
+   - One-on-one conversations between users
+   - No session association required
+   - Persistent chat history
+   - Easy access from user profiles
+
+2. **Session Chats**
+   - Associated with specific tutoring sessions
+   - Includes session context
+   - Limited to session participants
+   - Archived after session completion
+
+### Security & Access Control
+- Row Level Security (RLS) ensures:
+  - Users can only access their own chat rooms
+  - Messages are only visible to chat room participants
+  - Users can only send messages as themselves
+  - Chat room creation and participant management is properly controlled
+
+### User Experience
+- Clean, intuitive chat interface
+- Real-time message delivery
+- Message status indicators
+- Easy navigation between conversations
+- Mobile-responsive design
+
+### Technical Implementation
+1. **Database Structure**
+   - `chat_rooms` table for room management
+   - `chat_participants` for user relationships
+   - `chat_messages` for message storage
+   - `message_notifications` for real-time updates
+
+2. **Real-time Features**
+   - Supabase Realtime for instant updates
+   - WebSocket connections for live messaging
+   - Push notifications for offline users
+
+3. **Performance Considerations**
+   - Pagination for message history
+   - Efficient message loading
+   - Optimized real-time subscriptions
+   - Proper cleanup of old messages 
