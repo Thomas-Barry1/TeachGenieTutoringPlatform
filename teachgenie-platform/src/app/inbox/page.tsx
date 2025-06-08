@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation';
 
 interface ChatParticipant {
   user_id: string;
-  profiles: {
+  user: {
     id: string;
     first_name: string;
     last_name: string;
@@ -22,10 +22,23 @@ interface ChatMessage {
   created_at: string;
 }
 
-interface ChatRoom {
+interface ChatRoomResponse {
   id: string;
-  chat_participants: ChatParticipant[];
-  chat_messages: ChatMessage[];
+  chat_participants: {
+    user_id: string;
+    user: {
+      id: string;
+      first_name: string;
+      last_name: string;
+    };
+  }[];
+  chat_messages: {
+    id: string;
+    content: string;
+    sender_id: string;
+    is_read: boolean;
+    created_at: string;
+  }[];
 }
 
 interface TransformedChatRoom {
@@ -93,27 +106,47 @@ export default function InboxPage() {
       try {
         // Get all chat rooms the user is part of through chat_participants
         const { data: chatRooms, error: roomsError } = await supabase
-          .from('chat_rooms')
+          .from('chat_participants')
           .select(`
-            id,
-            chat_participants (
-              user_id,
-              profiles (
-                id,
-                first_name,
-                last_name
-              )
-            ),
-            chat_messages (
+            chat_room_id,
+            user_id,
+            user:user_id (
               id,
-              content,
-              sender_id,
-              is_read,
-              created_at
+              first_name,
+              last_name
+            ),
+            chat_rooms!inner (
+              id,
+              chat_messages (
+                id,
+                content,
+                sender_id,
+                is_read,
+                created_at
+              )
             )
           `)
-          .eq('chat_participants.user_id', currentUserId)
-          .order('created_at', { ascending: false });
+          .eq('user_id', currentUserId)
+          .order('created_at', { ascending: false })
+          .returns<{
+            chat_room_id: string;
+            user_id: string;
+            user: {
+              id: string;
+              first_name: string;
+              last_name: string;
+            };
+            chat_rooms: {
+              id: string;
+              chat_messages: {
+                id: string;
+                content: string;
+                sender_id: string;
+                is_read: boolean;
+                created_at: string;
+              }[];
+            };
+          }[]>();
 
         if (roomsError) {
           console.error('Error fetching chat rooms:', roomsError);
@@ -128,22 +161,14 @@ export default function InboxPage() {
 
         // Transform the chat rooms into the expected format
         const transformedRooms: TransformedChatRoom[] = chatRooms.map(room => {
-          const otherParticipant = room.chat_participants.find(
-            p => p.user_id !== currentUserId
-          );
-
-          const messages = room.chat_messages || [];
+          const messages = room.chat_rooms.chat_messages || [];
           const lastMessage = messages.length > 0 ? messages[0] : null;
 
           return {
-            id: room.id,
-            otherParticipant: otherParticipant ? {
-              id: otherParticipant.profiles.id,
-              name: `${otherParticipant.profiles.first_name} ${otherParticipant.profiles.last_name}`,
-              avatar: null
-            } : {
-              id: '',
-              name: 'Unknown User',
+            id: room.chat_room_id,
+            otherParticipant: {
+              id: room.user.id,
+              name: `${room.user.first_name} ${room.user.last_name}`,
               avatar: null
             },
             lastMessage,

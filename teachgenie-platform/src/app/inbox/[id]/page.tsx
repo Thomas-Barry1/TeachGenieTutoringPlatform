@@ -92,6 +92,9 @@ export default function ConversationPage() {
           .eq('chat_room_id', id)
           .returns<ChatParticipantResponse[]>();
 
+        console.log('Raw participants response:', participants);
+        console.log('Participants error:', participantsError);
+
         if (participantsError) {
           throw participantsError;
         }
@@ -105,8 +108,22 @@ export default function ConversationPage() {
 
         // Get the other participant
         const other = participants?.find(p => p.user_id !== currentUserId);
-        console.log('Participants data:', participants);
-        console.log('Other participant:', other);
+        console.log('Other participant raw data:', other);
+
+        // Let's also try a direct profile query to verify RLS
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .eq('id', other?.user_id)
+          .single();
+
+        console.log('Direct profile query:', profileData);
+        console.log('Profile query error:', profileError);
+
+        if (profileError) {
+          throw profileError;
+        }
+
         if (other) {
           console.log('Setting other participant with data:', {
             user_id: other.user_id,
