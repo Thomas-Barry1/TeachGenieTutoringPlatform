@@ -96,9 +96,16 @@ create table public.session_payments (
    - Direct session creation
 2. Session booking includes:
    - Date and time selection
-   - Duration (30min to 2 hours)
+   - Flexible duration options:
+     - Preset durations (30min, 1hr, 1.5hr, 2hr)
+     - Custom duration in 15-minute increments
+     - Minimum duration of 15 minutes
    - Subject selection (from tutor's available subjects)
-   - Price calculation based on tutor's hourly rate
+   - Rate management:
+     - Default rate from tutor's profile
+     - Adjustable per session
+     - Real-time price calculation
+     - Price = (Duration in hours × Hourly Rate)
 3. Security:
    - Only tutors can create sessions
    - Tutors can only create sessions where they are the tutor
@@ -190,6 +197,7 @@ create table public.message_notifications (
    - SessionForm
    - SessionCalendar
    - SessionDetails
+   - SessionBookingModal
 5. `Chat/`
    - ChatWindow
    - MessageList
@@ -313,8 +321,13 @@ create table public.message_notifications (
 ### Phase 1 (Core Features)
 1. Basic user authentication
 2. Tutor and student profiles
+   - Profile image upload
+   - Image optimization
 3. Subject management
 4. Session booking
+   - Flexible duration
+   - Rate management
+   - Price calculation
 5. Basic chat functionality
    - Separate inbox views for tutors and students
    - Real-time messaging
@@ -322,7 +335,6 @@ create table public.message_notifications (
 6. Payment processing
 7. Simple review system
 8. Role-specific dashboards
-   - Tutor dashboard with earnings and session management
 
 ### Phase 2 (Enhancements)
 1. Advanced scheduling

@@ -8,6 +8,7 @@ CREATE TABLE public.profiles (
   first_name TEXT,
   last_name TEXT,
   email TEXT,
+  avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
 );
@@ -382,4 +383,30 @@ CREATE POLICY "Update own notifications"
 
 CREATE POLICY "Create notifications"
   ON public.message_notifications FOR INSERT
-  WITH CHECK (auth.role() = 'service_role'); 
+  WITH CHECK (auth.role() = 'service_role');
+
+-- Storage bucket policies for profile images
+CREATE POLICY "Users can upload their own profile images"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'profile-images' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Anyone can view profile images"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'profile-images');
+
+CREATE POLICY "Users can update their own profile images"
+ON storage.objects FOR UPDATE
+USING (
+  bucket_id = 'profile-images' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+CREATE POLICY "Users can delete their own profile images"
+ON storage.objects FOR DELETE
+USING (
+  bucket_id = 'profile-images' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+); 

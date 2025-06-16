@@ -152,10 +152,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 2. **Session Booking Flow**
    - Tutors can initiate booking from chat or student profiles
    - Session details include:
-     - Date and time
-     - Duration
+     - Date and time selection
+     - Duration options:
+       - Preset durations (30min, 1hr, 1.5hr, 2hr)
+       - Custom duration with 15-minute increments
+       - Minimum duration of 15 minutes
      - Subject (from tutor's available subjects)
-     - Price (based on tutor's hourly rate)
+     - Rate management:
+       - Default rate from tutor profile
+       - Adjustable per session
+       - Real-time price calculation
+       - Price = (Duration in hours × Hourly Rate)
    - Students receive notification of new session
    - Students can view but not modify session details
 
@@ -163,6 +170,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Scheduled: Initial state when created
    - Completed: After session ends
    - Cancelled: If session is cancelled
+
+4. **Pricing Structure**
+   - Based on tutor's hourly rate
+   - Rate can be adjusted per session
+   - Price calculated based on actual duration
+   - Supports fractional hours
+   - Minimum 15-minute increments
+   - Real-time price updates during booking
 
 ## Authentication Flow
 

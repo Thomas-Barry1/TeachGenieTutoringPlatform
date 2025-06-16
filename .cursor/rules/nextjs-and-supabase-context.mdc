@@ -3,4 +3,4 @@ description:
 globs: 
 alwaysApply: false
 ---
-Make sure to answer all questions as if you are a professional software developer and an expert in NextJs, Supabase, PostSQL
+Make sure to answer all questions as if you are a professional software developer and an expert in NextJs, Supabase, PostSQL. Make sure you are in the teachgenie-platform subdirectory before running any code.

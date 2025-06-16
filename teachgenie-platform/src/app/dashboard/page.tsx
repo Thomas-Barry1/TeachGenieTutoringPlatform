@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import TutorSubjectManager from '@/components/TutorSubjectManager'
 import SessionsPage from '@/app/sessions/page'
+import ImageUpload from '@/components/Profile/ImageUpload'
 
 type Profile = {
   id: string
@@ -12,6 +13,7 @@ type Profile = {
   last_name: string
   user_type: 'student' | 'tutor'
   email: string
+  avatar_url: string | null
 }
 
 type TutorProfile = {
@@ -134,8 +136,62 @@ export default function DashboardPage() {
       </div>
 
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
-        <dl className="mt-4 space-y-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
+          {!isEditing ? (
+            <button
+              onClick={() => setIsEditing(true)}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              Edit Profile
+            </button>
+          ) : (
+            <div className="space-x-2">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+        <dl className="mt-4 space-y-6">
+          {/* Profile Image Section */}
+          <div>
+            <dt className="text-sm font-medium text-gray-500 mb-2">Profile Image</dt>
+            <dd className="mt-1">
+              <div className="flex items-start space-x-6">
+                {/* Current Avatar */}
+                <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100">
+                  {profile.avatar_url ? (
+                    <img
+                      src={profile.avatar_url}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      No image
+                    </div>
+                  )}
+                </div>
+                
+                {/* Upload Component - Only shown in edit mode */}
+                {isEditing && (
+                  <div className="flex-1">
+                    <ImageUpload
+                      userId={profile.id}
+                      onUploadComplete={(url) => {
+                        setProfile({ ...profile, avatar_url: url });
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </dd>
+          </div>
+
           <div>
             <dt className="text-sm font-medium text-gray-500">Name</dt>
             <dd className="mt-1 text-sm text-gray-900">
