@@ -4,8 +4,12 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
 
+type Profile = Database['public']['Tables']['profiles']['Row'] & {
+  avatar_url: string | null
+}
+
 type Tutor = Database['public']['Tables']['tutor_profiles']['Row'] & {
-  profile: Database['public']['Tables']['profiles']['Row'] | null
+  profile: Profile | null
   subjects: Database['public']['Tables']['subjects']['Row'][]
 }
 
@@ -138,7 +142,19 @@ export default function TutorsPage() {
           >
             <div className="p-6">
               <div className="flex items-center space-x-4">
-                <div className="h-16 w-16 rounded-full bg-gray-200" />
+                <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-200">
+                  {tutor.profile?.avatar_url ? (
+                    <img
+                      src={tutor.profile.avatar_url}
+                      alt={`${tutor.profile.first_name} ${tutor.profile.last_name}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center text-gray-400">
+                      No image
+                    </div>
+                  )}
+                </div>
                 <div>
                   <h3 className="text-lg font-semibold">
                     {tutor.profile?.first_name} {tutor.profile?.last_name}

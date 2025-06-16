@@ -6,11 +6,15 @@ import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
 import { useAuth } from '@/contexts/AuthContext'
 
+type Profile = Database['public']['Tables']['profiles']['Row'] & {
+  avatar_url: string | null
+}
+
 type Tutor = Database['public']['Tables']['tutor_profiles']['Row'] & {
-  profile: Database['public']['Tables']['profiles']['Row']
+  profile: Profile
   subjects: Database['public']['Tables']['subjects']['Row'][]
   reviews: (Database['public']['Tables']['reviews']['Row'] & {
-    student: Database['public']['Tables']['profiles']['Row']
+    student: Profile
   })[]
 }
 
@@ -120,7 +124,19 @@ export default function TutorProfilePage() {
       {/* Tutor Profile Header */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-start space-x-6">
-          <div className="h-24 w-24 rounded-full bg-gray-200" />
+          <div className="h-24 w-24 rounded-full overflow-hidden bg-gray-200">
+            {tutor.profile.avatar_url ? (
+              <img
+                src={tutor.profile.avatar_url}
+                alt={`${tutor.profile.first_name} ${tutor.profile.last_name}`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-gray-400">
+                No image
+              </div>
+            )}
+          </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold">
               {tutor.profile.first_name} {tutor.profile.last_name}
@@ -170,7 +186,19 @@ export default function TutorProfilePage() {
             {tutor.reviews.map(review => (
               <div key={review.id} className="border-b border-gray-200 pb-6 last:border-0">
                 <div className="flex items-center space-x-4">
-                  <div className="h-10 w-10 rounded-full bg-gray-200" />
+                  <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200">
+                    {review.student.avatar_url ? (
+                      <img
+                        src={review.student.avatar_url}
+                        alt={`${review.student.first_name} ${review.student.last_name}`}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-gray-400">
+                        No image
+                      </div>
+                    )}
+                  </div>
                   <div>
                     <h3 className="font-medium">
                       {review.student.first_name} {review.student.last_name}
@@ -198,7 +226,7 @@ export default function TutorProfilePage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-600">No reviews yet</p>
+          <p className="text-gray-500">No reviews yet</p>
         )}
       </div>
     </div>

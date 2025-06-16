@@ -1,11 +1,12 @@
 'use client'
 
-import { Fragment } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { createClient } from '@/lib/supabase/client'
 
 const navigation = [
   { name: 'Home', href: '/' },
@@ -21,6 +22,26 @@ function classNames(...classes: string[]) {
 export default function Header() {
   const pathname = usePathname()
   const { user, signOut } = useAuth()
+  const [profile, setProfile] = useState<{ avatar_url: string | null } | null>(null)
+
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user) return
+
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single()
+
+      if (!error && data) {
+        setProfile(data)
+      }
+    }
+
+    loadProfile()
+  }, [user])
 
   return (
     <Disclosure as="nav" className="bg-white shadow">
@@ -57,7 +78,15 @@ export default function Header() {
                     <div>
                       <Menu.Button className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
                         <span className="sr-only">Open user menu</span>
-                        <div className="h-8 w-8 rounded-full bg-gray-200" />
+                        {profile?.avatar_url ? (
+                          <img
+                            src={profile.avatar_url}
+                            alt="Profile"
+                            className="h-8 w-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-gray-200" />
+                        )}
                       </Menu.Button>
                     </div>
                     <Transition
