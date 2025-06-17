@@ -127,7 +127,7 @@ export default function SessionCard({ session, userType, onStatusChange }: Sessi
         {session.status === 'completed' && userType === 'student' && (
           <div className="mt-6">
             <a
-              href={`/reviews/new?sessionId=${session.id}`}
+              href={`/reviews/?sessionId=${session.id}`}
               className="block w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               Write a Review
