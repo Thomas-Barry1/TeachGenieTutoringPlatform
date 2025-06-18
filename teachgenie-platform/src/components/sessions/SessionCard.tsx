@@ -17,9 +17,10 @@ interface SessionCardProps {
   session: Session
   userType: 'student' | 'tutor'
   onStatusChange?: (sessionId: string, newStatus: Session['status']) => Promise<void>
+  onDelete?: (sessionId: string) => Promise<void>
 }
 
-export default function SessionCard({ session, userType, onStatusChange }: SessionCardProps) {
+export default function SessionCard({ session, userType, onStatusChange, onDelete }: SessionCardProps) {
   const startTime = new Date(session.start_time)
   const endTime = new Date(session.end_time)
   const otherParty = userType === 'student' ? session.tutor?.profile : session.student?.profile
@@ -34,6 +35,12 @@ export default function SessionCard({ session, userType, onStatusChange }: Sessi
         return 'bg-red-100 text-red-800'
       default:
         return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const handleDelete = async () => {
+    if (onDelete && confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+      await onDelete(session.id)
     }
   }
 
@@ -132,6 +139,18 @@ export default function SessionCard({ session, userType, onStatusChange }: Sessi
             >
               Write a Review
             </a>
+          </div>
+        )}
+
+        {/* Delete button for tutors on cancelled or completed sessions */}
+        {userType === 'tutor' && (session.status === 'cancelled' || session.status === 'completed') && onDelete && (
+          <div className="mt-6">
+            <button
+              onClick={handleDelete}
+              className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Delete Session
+            </button>
           </div>
         )}
       </div>

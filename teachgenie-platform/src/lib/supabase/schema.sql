@@ -263,6 +263,13 @@ CREATE POLICY "Delete scheduled sessions"
     status = 'scheduled'
   );
 
+CREATE POLICY "Delete completed or cancelled sessions"
+  ON public.sessions FOR DELETE
+  USING (
+    auth.uid() = tutor_id AND
+    status IN ('completed', 'cancelled')
+  );
+
 -- Session payments policies
 CREATE POLICY "View own session payments"
   ON public.session_payments FOR SELECT

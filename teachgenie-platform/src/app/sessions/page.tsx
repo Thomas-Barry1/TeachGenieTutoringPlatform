@@ -22,6 +22,7 @@ export default function SessionsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<'upcoming' | 'past'>('upcoming')
+  const [userType, setUserType] = useState<'student' | 'tutor'>('student')
 
   console.log('SessionsPage mounted')
   console.log('Current user:', user)
@@ -69,6 +70,7 @@ export default function SessionsPage() {
         }
 
         console.log('User profile:', profile)
+        setUserType(profile.user_type)
 
         const now = new Date().toISOString()
         console.log('Current time:', now)
@@ -132,6 +134,22 @@ export default function SessionsPage() {
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update session status')
+    }
+  }
+
+  const handleDelete = async (sessionId: string) => {
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('sessions')
+        .delete()
+        .eq('id', sessionId)
+
+      if (error) throw error
+
+      setSessions((prev) => prev.filter((session) => session.id !== sessionId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete session')
     }
   }
 
@@ -204,8 +222,9 @@ export default function SessionsPage() {
               <SessionCard
                 key={session.id}
                 session={session}
-                userType={user?.user_metadata.user_type || 'student'}
+                userType={userType}
                 onStatusChange={handleStatusChange}
+                onDelete={handleDelete}
               />
             ))}
           </div>
