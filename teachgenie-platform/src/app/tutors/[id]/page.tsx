@@ -187,7 +187,7 @@ export default function TutorProfilePage() {
               <div key={review.id} className="border-b border-gray-200 pb-6 last:border-0">
                 <div className="flex items-center space-x-4">
                   <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200">
-                    {review.student.avatar_url ? (
+                    {review.student && review.student.avatar_url ? (
                       <img
                         src={review.student.avatar_url}
                         alt={`${review.student.first_name} ${review.student.last_name}`}
@@ -195,13 +195,16 @@ export default function TutorProfilePage() {
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-gray-400">
-                        No image
+                        ?
                       </div>
                     )}
                   </div>
                   <div>
                     <h3 className="font-medium">
-                      {review.student.first_name} {review.student.last_name}
+                      {review.student 
+                        ? `${review.student.first_name} ${review.student.last_name}`
+                        : 'Student (private)'
+                      }
                     </h3>
                     <div className="flex items-center mt-1">
                       {[...Array(5)].map((_, i) => (

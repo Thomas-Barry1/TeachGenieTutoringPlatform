@@ -167,6 +167,16 @@ CREATE POLICY "Create new profile"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.role() = 'authenticated');
 
+CREATE POLICY "View reviewer profiles for tutor reviews"
+  ON public.profiles FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.reviews
+      WHERE reviews.student_id = profiles.id
+    )
+    AND auth.role() = 'authenticated'
+  );
+
 -- Tutor profiles policies
 CREATE POLICY "View all tutor profiles"
   ON public.tutor_profiles FOR SELECT
