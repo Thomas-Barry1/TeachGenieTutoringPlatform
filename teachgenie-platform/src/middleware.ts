@@ -38,6 +38,12 @@ export async function middleware(request: NextRequest) {
 
   // Auth routes handling
   if (request.nextUrl.pathname.startsWith('/auth')) {
+    // Allow access to verify-email and callback pages even for authenticated users
+    if (request.nextUrl.pathname.startsWith('/auth/verify-email') || 
+        request.nextUrl.pathname.startsWith('/auth/callback')) {
+      return response
+    }
+    
     if (session) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }

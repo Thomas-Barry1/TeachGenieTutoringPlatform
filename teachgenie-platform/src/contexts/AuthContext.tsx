@@ -67,38 +67,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       userType: 'student' | 'tutor'
     }
   ) => {
-    // Create auth user
+    console.log('Starting signup process...')
+    // Dynamically set redirect URL
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
+    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}`;
+    // Create auth user only - profiles will be created after email verification
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          first_name: userData.firstName,
+          last_name: userData.lastName,
+          user_type: userData.userType,
+        },
+        emailRedirectTo: redirectTo,
+      }
     })
-    if (authError) throw authError
-    if (!authData.user) throw new Error('Failed to create user')
-
-    // Create profile
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: authData.user.id,
-        first_name: userData.firstName,
-        last_name: userData.lastName,
-        user_type: userData.userType,
-        email,
-      })
-    if (profileError) throw profileError
-
-    // If user is a tutor, create tutor profile
-    if (userData.userType === 'tutor') {
-      const { error: tutorError } = await supabase
-        .from('tutor_profiles')
-        .insert({
-          id: authData.user.id,
-          is_verified: false,
-        })
-      if (tutorError) throw tutorError
+    if (authError) {
+      console.error('Auth signup error:', authError)
+      throw authError
     }
-
-    router.push('/dashboard')
+    if (!authData.user) {
+      console.error('No user data returned from signup')
+      throw new Error('Failed to create user')
+    }
+    console.log('Auth user created successfully:', authData.user.id)
+    console.log('Redirecting to verification page...')
+    // Redirect to verification page - profiles will be created after verification
+    router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
   }
 
   const signOut = async () => {
