@@ -104,81 +104,81 @@ export default function InboxPage() {
       if (!currentUserId) return;
 
       try {
-        // Get all chat rooms the user is part of through chat_participants
-        const { data: chatRooms, error: roomsError } = await supabase
+        setLoading(true);
+        // Step 1: Get all chat room IDs the current user is part of.
+        const { data: participationData, error: participationError } = await supabase
           .from('chat_participants')
+          .select('chat_room_id')
+          .eq('user_id', currentUserId);
+
+        if (participationError) throw participationError;
+
+        const roomIds = participationData.map(p => p.chat_room_id);
+        if (roomIds.length === 0) {
+          setMessages([]);
+          setLoading(false);
+          return;
+        }
+
+        // Step 2: Fetch the full data for those chat rooms, including all participants and messages.
+        const { data: chatRoomsData, error: roomsError } = await supabase
+          .from('chat_rooms')
           .select(`
-            chat_room_id,
-            user_id,
-            user:user_id (
-              id,
-              first_name,
-              last_name
-            ),
-            chat_rooms!inner (
-              id,
-              chat_messages (
+            id,
+            chat_participants (
+              user:profiles (
                 id,
-                content,
-                sender_id,
-                is_read,
-                created_at
+                first_name,
+                last_name,
+                avatar_url
               )
+            ),
+            chat_messages (
+              id,
+              content,
+              sender_id,
+              is_read,
+              created_at
             )
           `)
-          .eq('user_id', currentUserId)
-          .order('created_at', { ascending: false })
-          .returns<{
-            chat_room_id: string;
-            user_id: string;
-            user: {
-              id: string;
-              first_name: string;
-              last_name: string;
+          .in('id', roomIds);
+        
+        if (roomsError) throw roomsError;
+
+        // Step 3: Transform the data to identify the "other participant" correctly.
+        const transformedRooms: TransformedChatRoom[] = chatRoomsData
+          .map((room: any) => {
+            const otherParticipantProfile = room.chat_participants.find(
+              (p: any) => p.user && p.user.id !== currentUserId
+            )?.user;
+
+            // Sort messages to find the most recent one.
+            const sortedMessages = room.chat_messages.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            const lastMessage = sortedMessages[0] || null;
+
+            return {
+              id: room.id,
+              otherParticipant: {
+                id: otherParticipantProfile?.id || '',
+                name: otherParticipantProfile
+                  ? `${otherParticipantProfile.first_name} ${otherParticipantProfile.last_name}`
+                  : 'Unknown User',
+                avatar: otherParticipantProfile?.avatar_url || null,
+              },
+              lastMessage,
+              messages: sortedMessages,
             };
-            chat_rooms: {
-              id: string;
-              chat_messages: {
-                id: string;
-                content: string;
-                sender_id: string;
-                is_read: boolean;
-                created_at: string;
-              }[];
-            };
-          }[]>();
-
-        if (roomsError) {
-          console.error('Error fetching chat rooms:', roomsError);
-          setError('Error fetching chat rooms');
-          return;
-        }
-
-        if (!chatRooms?.length) {
-          setMessages([]);
-          return;
-        }
-
-        // Transform the chat rooms into the expected format
-        const transformedRooms: TransformedChatRoom[] = chatRooms.map(room => {
-          const messages = room.chat_rooms.chat_messages || [];
-          const lastMessage = messages.length > 0 ? messages[0] : null;
-
-          return {
-            id: room.chat_room_id,
-            otherParticipant: {
-              id: room.user.id,
-              name: `${room.user.first_name} ${room.user.last_name}`,
-              avatar: null
-            },
-            lastMessage,
-            messages
-          };
-        });
+          })
+          .filter(room => room.otherParticipant.id) // Ensure there is another participant
+          .sort((a, b) => { // Sort rooms by the most recent message
+            if (!a.lastMessage) return 1;
+            if (!b.lastMessage) return -1;
+            return new Date(b.lastMessage.created_at).getTime() - new Date(a.lastMessage.created_at).getTime();
+          });
 
         setMessages(transformedRooms);
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching messages:', error);
         setError('An unexpected error occurred');
       } finally {
         setLoading(false);
@@ -193,17 +193,18 @@ export default function InboxPage() {
     if (!currentUserId || !recipientId || !newMessage.trim()) return;
 
     try {
+      console.log('Attempting to send message');
       // First check if a chat room already exists between these users
       const { data: existingRooms, error: searchError } = await supabase
         .from('chat_rooms')
         .select(`
           id,
-          chat_participants!inner (
+          chat_participants (
             user_id
           )
         `)
         .eq('type', 'direct')
-        .eq('chat_participants.user_id', currentUserId);
+        // .eq('chat_participants.user_id', currentUserId);
 
       if (searchError) {
         console.error('Error searching for chat rooms:', searchError);
@@ -211,15 +212,20 @@ export default function InboxPage() {
         return;
       }
 
+      console.log('Existing rooms found:', existingRooms);
+
       // Find a room where both users are participants
       const existingRoom = existingRooms?.find(room => 
-        room.chat_participants.some(p => p.user_id === recipientId)
+        room.chat_participants.some(p => p.user_id === recipientId) && 
+        room.chat_participants.some(p => p.user_id === currentUserId)
       );
 
       let chatRoomId;
       if (existingRoom) {
+        console.log('Using existing room:', existingRoom.id);
         chatRoomId = existingRoom.id;
       } else {
+        console.log('No existing room found, creating new chat room');
         // Create new chat room
         const { data: newRoom, error: roomError } = await supabase
           .from('chat_rooms')
@@ -394,7 +400,7 @@ export default function InboxPage() {
                   <img
                     src={room.otherParticipant.avatar}
                     alt={room.otherParticipant.name}
-                    className="w-10 h-10 rounded-full"
+                    className="w-10 h-10 rounded-full object-cover"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
