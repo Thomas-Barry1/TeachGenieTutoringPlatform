@@ -141,7 +141,8 @@ export default function InboxPage() {
               created_at
             )
           `)
-          .in('id', roomIds);
+          .in('id', roomIds)
+          .order('created_at', { foreignTable: 'chat_messages', ascending: false });
         
         if (roomsError) throw roomsError;
 
@@ -152,9 +153,8 @@ export default function InboxPage() {
               (p: any) => p.user && p.user.id !== currentUserId
             )?.user;
 
-            // Sort messages to find the most recent one.
-            const sortedMessages = room.chat_messages.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-            const lastMessage = sortedMessages[0] || null;
+            // Messages are now pre-sorted by the database.
+            const lastMessage = room.chat_messages[0] || null;
 
             return {
               id: room.id,
@@ -166,15 +166,10 @@ export default function InboxPage() {
                 avatar: otherParticipantProfile?.avatar_url || null,
               },
               lastMessage,
-              messages: sortedMessages,
+              messages: room.chat_messages,
             };
           })
-          .filter(room => room.otherParticipant.id) // Ensure there is another participant
-          .sort((a, b) => { // Sort rooms by the most recent message
-            if (!a.lastMessage) return 1;
-            if (!b.lastMessage) return -1;
-            return new Date(b.lastMessage.created_at).getTime() - new Date(a.lastMessage.created_at).getTime();
-          });
+          .filter(room => room.otherParticipant.id); // Ensure there is another participant
 
         setMessages(transformedRooms);
       } catch (error) {
