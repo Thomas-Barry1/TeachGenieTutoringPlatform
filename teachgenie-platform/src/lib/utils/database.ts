@@ -61,6 +61,7 @@ export async function getTutorSubjects(tutorId: string): Promise<Subject[]> {
 
   return data
     .map(item => item.subjects)
+    .flat()
     .filter((subject): subject is Subject => 
       subject !== null && 
       typeof subject.id === 'string' &&
