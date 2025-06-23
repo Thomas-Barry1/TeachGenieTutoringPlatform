@@ -4,10 +4,10 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Users table (extends Supabase auth)
 CREATE TABLE public.profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE,
-  user_type TEXT CHECK (user_type IN ('student', 'tutor')),
+  user_type TEXT NOT NULL CHECK (user_type IN ('student', 'tutor')),
   first_name TEXT,
   last_name TEXT,
-  email TEXT,
+  email TEXT NOT NULL,
   avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
@@ -17,7 +17,7 @@ CREATE TABLE public.profiles (
 CREATE TABLE public.tutor_profiles (
   id UUID REFERENCES public.profiles ON DELETE CASCADE,
   bio TEXT,
-  hourly_rate DECIMAL,
+  hourly_rate DECIMAL CHECK (hourly_rate > 0),
   is_verified BOOLEAN DEFAULT false,
   PRIMARY KEY (id)
 );
@@ -25,7 +25,7 @@ CREATE TABLE public.tutor_profiles (
 -- Subject categories
 CREATE TABLE public.subjects (
   id UUID DEFAULT uuid_generate_v4(),
-  name TEXT,
+  name TEXT NOT NULL,
   category TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
@@ -44,10 +44,10 @@ CREATE TABLE public.sessions (
   tutor_id UUID REFERENCES public.tutor_profiles,
   student_id UUID REFERENCES public.profiles,
   subject_id UUID REFERENCES public.subjects,
-  start_time TIMESTAMP WITH TIME ZONE,
-  end_time TIMESTAMP WITH TIME ZONE,
-  status TEXT CHECK (status IN ('scheduled', 'completed', 'cancelled')),
-  price DECIMAL,
+  start_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  end_time TIMESTAMP WITH TIME ZONE NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('scheduled', 'completed', 'cancelled')),
+  price DECIMAL CHECK (price >= 0),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
 );
@@ -56,9 +56,9 @@ CREATE TABLE public.sessions (
 CREATE TABLE public.session_payments (
   id UUID DEFAULT uuid_generate_v4(),
   session_id UUID REFERENCES public.sessions,
-  amount DECIMAL,
-  platform_fee DECIMAL,
-  tutor_payout DECIMAL,
+  amount DECIMAL NOT NULL CHECK (amount >= 0),
+  platform_fee DECIMAL CHECK (platform_fee >= 0),
+  tutor_payout DECIMAL CHECK (tutor_payout >= 0),
   stripe_payment_id TEXT,
   status TEXT CHECK (status IN ('pending', 'completed', 'failed')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
@@ -71,7 +71,7 @@ CREATE TABLE public.reviews (
   session_id UUID REFERENCES public.sessions,
   student_id UUID REFERENCES public.profiles,
   tutor_id UUID REFERENCES public.tutor_profiles,
-  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
@@ -97,7 +97,7 @@ CREATE TABLE public.chat_messages (
   id UUID DEFAULT uuid_generate_v4(),
   chat_room_id UUID REFERENCES public.chat_rooms ON DELETE CASCADE,
   sender_id UUID REFERENCES public.profiles ON DELETE CASCADE,
-  content TEXT,
+  content TEXT NOT NULL,
   is_read BOOLEAN DEFAULT false,
   read_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
@@ -113,6 +113,19 @@ CREATE TABLE public.message_notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
 );
+
+-- Performance Indexes (Speed up common queries)
+CREATE INDEX IF NOT EXISTS idx_sessions_tutor_id ON public.sessions(tutor_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_student_id ON public.sessions(student_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_status ON public.sessions(status);
+CREATE INDEX IF NOT EXISTS idx_sessions_start_time ON public.sessions(start_time);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_room_id ON public.chat_messages(chat_room_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON public.chat_messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_sender_id ON public.chat_messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_tutor_id ON public.reviews(tutor_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_session_id ON public.reviews(session_id);
+CREATE INDEX IF NOT EXISTS idx_profiles_user_type ON public.profiles(user_type);
+CREATE INDEX IF NOT EXISTS idx_tutor_profiles_verified ON public.tutor_profiles(is_verified);
 
 -- Row Level Security (RLS) Policies
 
