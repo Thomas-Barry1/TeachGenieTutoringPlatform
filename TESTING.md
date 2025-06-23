@@ -54,6 +54,7 @@
   - Authentication flows
   - Session booking
   - Chat functionality
+  - Email notifications
   - Payment processing
   - Profile management
 
@@ -105,16 +106,14 @@ describe('Session Booking', () => {
 })
 ```
 
-#### Payment Processing
+#### Session Management
 ```typescript
-describe('Payment Processing', () => {
-  test('Successful payment processing')
-  test('Failed payment handling')
-  test('Refund processing')
-  test('Platform fee calculation')
-  test('Tutor payout calculation')
+describe('Session Management', () => {
+  test('Session status updates')
+  test('Session completion by tutor')
+  test('Session cancellation handling')
+  test('Session history tracking')
 })
-```
 
 ### Chat System Tests
 
@@ -128,6 +127,29 @@ describe('Chat System', () => {
   test('Chat history loading')
 })
 ```
+
+### Email Notification Tests
+
+#### Notification System
+```typescript
+describe('Email Notifications', () => {
+  test('Send email notification for new message')
+  test('Rate limiting prevents spam')
+  test('Authentication validation for API calls')
+  test('Email delivery error handling')
+  test('Notification frequency controls')
+  test('Email template rendering')
+})
+
+#### API Endpoint Testing
+```typescript
+describe('Notify Message API', () => {
+  test('POST /api/notify-message with valid session')
+  test('POST /api/notify-message without authentication')
+  test('POST /api/notify-message with missing fields')
+  test('Email delivery success response')
+  test('Email delivery failure handling')
+})
 
 ### Profile Management Tests
 
@@ -180,6 +202,15 @@ jest.mock('@/lib/supabase/client', () => ({
     }))
   }
 }))
+
+// Example of mocking Resend email service
+jest.mock('resend', () => ({
+  Resend: jest.fn().mockImplementation(() => ({
+    emails: {
+      send: jest.fn().mockResolvedValue({ id: 'mock-email-id' })
+    }
+  }))
+}))
 ```
 
 ### Integration Testing
@@ -196,6 +227,24 @@ describe('Authentication Integration', () => {
     cy.get('[data-testid="password-input"]').type('password123')
     cy.get('[data-testid="login-button"]').click()
     cy.url().should('include', '/dashboard')
+  })
+})
+```
+
+2. **Email Notification Flow**
+```typescript
+describe('Email Notification Integration', () => {
+  beforeEach(() => {
+    cy.login('tutor@example.com', 'password123')
+    cy.visit('/inbox')
+  })
+
+  it('sends email notification for new message', () => {
+    cy.intercept('POST', '/api/notify-message', { statusCode: 200, body: { success: true } })
+    cy.get('[data-testid="message-input"]').type('Hello, this is a test message')
+    cy.get('[data-testid="send-button"]').click()
+    cy.wait('@notify-message')
+    cy.get('[data-testid="notification-success"]').should('be.visible')
   })
 })
 ```
@@ -222,7 +271,8 @@ describe('Session Booking Integration', () => {
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_test_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_test_supabase_anon_key
-STRIPE_TEST_SECRET_KEY=your_stripe_test_key
+# Email
+RESEND_API_KEY=your_test_resend_key
 ```
 
 ### Test Database Setup

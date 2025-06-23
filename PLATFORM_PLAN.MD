@@ -7,7 +7,7 @@
 - **Authentication**: Supabase Auth
 - **Database**: PostgreSQL (via Supabase)
 - **Real-time**: Supabase Realtime
-- **Payments**: Stripe
+- **Email**: Resend
 - **File Storage**: Supabase Storage
 
 ## Core Features (Phase 1)
@@ -82,8 +82,7 @@ create table public.session_payments (
   amount decimal,
   platform_fee decimal,
   tutor_payout decimal,
-  stripe_payment_id text,
-  status text check (status in ('pending', 'completed', 'failed')),
+  payment_status text check (status in ('pending', 'completed', 'failed')),
   created_at timestamp with time zone default timezone('utc'::text, now()),
   primary key (id)
 );
@@ -160,6 +159,22 @@ create table public.message_notifications (
   primary key (id)
 );
 ```
+
+### 6. Email Notifications
+#### Implementation
+- **Service**: Resend for transactional emails
+- **Security**: Server-side API routes with authentication
+- **Rate Limiting**: Prevents spam by checking message frequency
+
+#### Use Cases
+1. **Message Notifications**: Email alerts for new chat messages
+2. **Session Updates**: Reminders and confirmations for tutoring sessions
+3. **Account Verification**: Email verification for new registrations
+
+#### API Endpoint
+- `POST /api/notify-message` - Sends email notifications
+- **Authentication**: Validates user session using Supabase Auth
+- **Error Handling**: Graceful fallback for email delivery failures
 
 ## Frontend Structure
 
@@ -249,6 +264,9 @@ create table public.message_notifications (
 - `PATCH /api/chat/messages/[id]/read`
 - `GET /api/chat/conversations` (different for tutors/students)
 
+### Notifications
+- `POST /api/notify-message` - Send email notifications
+
 ### Dashboard
 - `GET /api/dashboard/tutor`
 - `GET /api/dashboard/upcoming-sessions`
@@ -277,7 +295,8 @@ create table public.message_notifications (
    - Resource library
    - Progress tracking
 
-5. **Advanced Payment Features**
+5. **Payment Integration**
+   - Stripe payment processing
    - Subscription plans
    - Multiple currencies
    - Automated payouts
@@ -289,10 +308,11 @@ create table public.message_notifications (
    - Implement row-level security in Supabase
    - Regular security audits
 
-2. **Payment Security**
-   - PCI compliance
-   - Secure payment processing
-   - Fraud prevention
+2. **Email Security**
+   - Server-side email delivery
+   - Authentication validation for notifications
+   - Rate limiting to prevent abuse
+   - Secure API key management
 
 3. **User Privacy**
    - GDPR compliance
@@ -332,9 +352,13 @@ create table public.message_notifications (
    - Separate inbox views for tutors and students
    - Real-time messaging
    - Message notifications
-6. Payment processing
-7. Simple review system
-8. Role-specific dashboards
+6. Email notifications
+   - Server-side email delivery with Resend
+   - Authentication-protected API routes
+   - Rate limiting to prevent spam
+7. Payment processing
+8. Simple review system
+9. Role-specific dashboards
 
 ### Phase 2 (Enhancements)
 1. Advanced scheduling

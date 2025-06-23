@@ -6,6 +6,7 @@
 - **Database**: PostgreSQL (via Supabase)
 - **Authentication**: Supabase Auth
 - **Real-time**: Supabase Realtime
+- **Email**: Resend
 - **Deployment**: Vercel
 - **Styling**: Tailwind CSS
 
@@ -16,6 +17,7 @@ Required environment variables in `.env.local`:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+RESEND_API_KEY=your_resend_api_key
 ```
 
 ### Configuration Files
@@ -24,6 +26,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 - `tailwind.config.ts` - Tailwind CSS configuration
 - `tsconfig.json` - TypeScript configuration
 - `eslint.config.mjs` - ESLint configuration
+- `.eslintrc.json` - Legacy ESLint configuration for compatibility
 
 ### Middleware
 - `src/middleware.ts` - Handles authentication and route protection
@@ -45,12 +48,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ### Important Files
 - `src/lib/supabase/schema.sql` - Database schema and RLS policies
 - `src/lib/supabase/client.ts` - Supabase client configuration
+- `src/lib/supabase/server.ts` - Supabase server client with cookie management
 - `src/contexts/AuthContext.tsx` - Authentication state management
 - `src/types/database.ts` - Database type definitions
 - `src/types/supabase.ts` - Supabase client type definitions
 - `src/middleware.ts` - Route protection and authentication
 - `src/app/layout.tsx` - Root layout with providers
 - `src/app/page.tsx` - Landing page
+- `src/app/api/notify-message/route.ts` - Email notification API endpoint
 
 ## Database Schema
 
@@ -82,7 +87,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 6. `session_payments`
    - Payment records for sessions
    - Handles platform fees and tutor payouts
-   - Integrates with Stripe
+   - Tracks payment status and history
 
 7. `reviews`
    - Student reviews for tutors
@@ -188,9 +193,32 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Tutors get additional tutor_profile entry
 
 2. Login
-   - Uses Supabase auth
+   - Uses Supabase auth with secure cookie management
    - Loads user profile and role
    - Redirects to appropriate dashboard
+
+3. Session Management
+   - Uses Next.js 14+ cookie API with `getAll`/`setAll` methods
+   - Secure HttpOnly cookies for session persistence
+   - Proper token refresh and session validation
+
+## Email Notifications
+
+### Implementation
+- **Service**: Resend for transactional emails
+- **Security**: Server-side API routes with authentication
+- **Triggers**: New messages, session updates, account verification
+
+### API Endpoint
+- `POST /api/notify-message` - Sends email notifications
+- **Authentication**: Validates user session using Supabase Auth
+- **Rate Limiting**: Prevents spam by checking message frequency
+- **Error Handling**: Graceful fallback for email delivery failures
+
+### Use Cases
+1. **Message Notifications**: Email alerts for new chat messages
+2. **Session Updates**: Reminders and confirmations for tutoring sessions
+3. **Account Verification**: Email verification for new registrations
 
 ## Important Decisions
 
@@ -202,7 +230,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 2. **Security**
    - RLS policies for granular access control
    - No direct database access from frontend
-   - Secure authentication flow
+   - Secure authentication flow with proper cookie management
+   - Server-side API routes for sensitive operations
+   - Email notifications with authentication validation
 
 3. **Real-time Features**
    - Chat system for session communication
@@ -247,6 +277,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Video integration for sessions
    - Advanced scheduling system
    - Payment processing improvements
+   - Enhanced email notification system
 
 3. **Security**
    - Regular security audits
@@ -283,6 +314,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Ensure environment variables are set correctly
    - Check RLS policies if data access fails
    - Verify user roles in middleware
+   - Use `credentials: 'include'` for API calls requiring authentication
+   - Ensure proper cookie management with Next.js 14+ API
 
 2. **Database**
    - Use proper foreign key relationships
@@ -293,6 +326,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Run `npm install` after pulling changes
    - Clear `.next` cache if build issues occur
    - Check TypeScript types for errors
+   - Use Suspense boundaries for components using `useSearchParams()`
+
+4. **Email Notifications**
+   - Verify Resend API key is configured
+   - Check authentication in API routes
+   - Monitor email delivery rates
+   - Implement proper rate limiting to prevent spam
 
 ## Testing (Planned)
 
@@ -305,6 +345,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
    - Authentication flow
    - Session booking
    - Payment processing
+   - Email notifications
 
 3. **E2E Tests**
    - User journeys
