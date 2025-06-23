@@ -11,7 +11,7 @@ export default function Home() {
               Find Your Perfect Tutor
             </h1>
             <p className="mt-6 text-lg leading-8 text-gray-600">
-              Connect with expert tutors for personalized learning experiences. Whether you're looking to improve your grades, learn a new skill, or prepare for exams, we've got you covered.
+              Connect with expert tutors for personalized learning experiences. Whether you&#39;re looking to improve your grades, learn a new skill, or prepare for exams, we&#39;ve got you covered.
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <Link

@@ -1,6 +1,6 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import { useSearchParams } from 'next/navigation';
@@ -58,7 +58,7 @@ type Profile = {
   last_name: string;
 };
 
-export default function InboxPage() {
+function InboxPage() {
   const [messages, setMessages] = useState<TransformedChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -454,5 +454,13 @@ export default function InboxPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function InboxPageWithSuspense() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InboxPage />
+    </Suspense>
   );
 } 

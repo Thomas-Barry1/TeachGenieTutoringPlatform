@@ -18,7 +18,7 @@ export default function AuthLayout({
                 Transform Your Learning Journey
               </h2>
               <p className="mt-6 text-lg leading-8 text-primary-100">
-                Connect with expert tutors who can help you achieve your academic goals. Whether you're looking to improve your grades or learn something new, we've got you covered.
+                Connect with expert tutors who can help you achieve your academic goals. Whether you&#39;re looking to improve your grades or learn something new, we&#39;ve got you covered.
               </p>
             </div>
           </div>

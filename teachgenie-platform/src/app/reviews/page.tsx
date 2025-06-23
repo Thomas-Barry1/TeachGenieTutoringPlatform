@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
@@ -12,7 +12,7 @@ type Session = Database['public']['Tables']['sessions']['Row'] & {
   subject: Database['public']['Tables']['subjects']['Row']
 }
 
-export default function ReviewPage() {
+function ReviewPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const sessionId = searchParams.get('sessionId')
@@ -207,5 +207,13 @@ export default function ReviewPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ReviewPageWithSuspense() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ReviewPage />
+    </Suspense>
   )
 } 

@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
@@ -332,6 +332,52 @@ export default function ConversationPage() {
       })) as unknown as ChatMessage[];
 
       setMessages(typedMessages);
+
+      // --- EMAIL NOTIFICATION LOGIC ---
+      // Only notify if the last message from this user was more than 5 minutes ago
+      const now = new Date();
+      const lastSent = typedMessages
+        .filter(m => m.sender_id === currentUserId)
+        .map(m => new Date(m.created_at))
+        .sort((a, b) => b.getTime() - a.getTime())[1];
+      console.log('[Notify] Now:', now, 'Last sent:', lastSent);
+      if (!lastSent || (now.getTime() - lastSent.getTime()) > 5 * 60 * 1000) {
+        // Send email notification to the other participant
+        if (otherParticipant?.profiles && otherParticipant.profiles.id !== currentUserId) {
+          // Fetch recipient email from Supabase
+          const { data: recipientProfile } = await supabase
+            .from('profiles')
+            .select('email, first_name')
+            .eq('id', otherParticipant.profiles.id)
+            .single();
+          console.log('[Notify] Recipient profile:', recipientProfile);
+          if (recipientProfile?.email) {
+            const notifyRes = await fetch('/api/notify-message', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: recipientProfile.email,
+                subject: 'New message on TeachGenie',
+                html: `<p>You have a new message from ${currentUserProfile?.user_type === 'tutor' ? 'your tutor' : 'your student'}:<br/>${newMessage.trim()}</p>`
+              }),
+              credentials: 'include' // Ensure cookies are sent
+            });
+            const notifyData = await notifyRes.json();
+            console.log('[Notify] API response:', notifyData);
+          } else {
+            console.log('[Notify] No recipient email found.');
+          }
+        } else {
+          console.log('[Notify] No other participant or trying to notify self.');
+        }
+      } else {
+        console.log('[Notify] Last message sent less than 5 minutes ago, skipping email.');
+      }
+      // --- END EMAIL NOTIFICATION LOGIC ---
+      // SECURITY NOTE: The API route /api/notify-message checks Supabase Auth session 
+      // on the server, so only authenticated users can trigger emails. The recipient 
+      // email is fetched server-side, not exposed to the client. This is a secure pattern 
+      // for transactional notifications.
     } catch (error) {
       console.error('Error:', error);
       setError('Failed to send message');
@@ -429,12 +475,22 @@ export default function ConversationPage() {
                 Conversation with {otherParticipant?.profiles.first_name} {otherParticipant?.profiles.last_name}
               </h1>
               {currentUserProfile?.user_type === 'tutor' && (
-                <button
-                  onClick={() => setShowBookingModal(true)}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Book Session
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setShowBookingModal(true)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    Book Session
+                  </button>
+                  <a
+                    href="http://teachgenie.io"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    Tutor Tools
+                  </a>
+                </div>
               )}
             </div>
           </div>

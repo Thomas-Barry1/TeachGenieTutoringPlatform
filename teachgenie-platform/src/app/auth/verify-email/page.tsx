@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
-export default function VerifyEmailPage() {
+function VerifyEmailPage() {
   const [resending, setResending] = useState(false)
   const [resendSuccess, setResendSuccess] = useState(false)
   const [resendError, setResendError] = useState<string | null>(null)
@@ -85,7 +85,7 @@ export default function VerifyEmailPage() {
             </h2>
             
             <p className="mt-2 text-sm text-gray-600">
-              We've sent you a verification link to complete your registration.
+              We&#39;ve sent you a verification link to complete your registration.
             </p>
           </div>
 
@@ -98,7 +98,7 @@ export default function VerifyEmailPage() {
               <ol className="text-sm text-blue-700 space-y-1">
                 <li>1. Check your email inbox (and spam folder)</li>
                 <li>2. Click the verification link in the email</li>
-                <li>3. You'll be redirected to complete your account setup</li>
+                <li>3. You&#39;ll be redirected to complete your account setup</li>
                 <li>4. Then you can sign in to your account</li>
               </ol>
             </div>
@@ -107,7 +107,7 @@ export default function VerifyEmailPage() {
             <div className="space-y-4">
               <div className="text-center">
                 <p className="text-sm text-gray-600">
-                  Didn't receive the email?
+                  Didn&#39;t receive the email?
                 </p>
               </div>
 
@@ -150,4 +150,12 @@ export default function VerifyEmailPage() {
       </div>
     </div>
   )
+}
+
+export default function VerifyEmailPageWithSuspense() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyEmailPage />
+    </Suspense>
+  );
 } 
