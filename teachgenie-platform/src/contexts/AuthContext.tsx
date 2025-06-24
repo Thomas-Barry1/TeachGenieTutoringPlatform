@@ -68,9 +68,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   ) => {
     console.log('Starting signup process...')
-    // Dynamically set redirect URL
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}`;
+    
+    // Set redirect URL based on environment
+    let redirectTo: string
+    if (typeof window !== 'undefined') {
+      // Client-side: use current origin
+      const currentPath = window.location.pathname
+      redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}`
+    } else {
+      // Server-side: use environment variable or default
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      redirectTo = `${baseUrl}/auth/callback`
+    }
+    
+    console.log('Redirect URL:', redirectTo)
+    
     // Create auth user only - profiles will be created after email verification
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
