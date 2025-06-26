@@ -57,18 +57,32 @@ export default function DashboardPage() {
 
       if (profileData.user_type === 'tutor') {
         console.log('Loading tutor profile for:', user.id)
-        const { data: tutorData, error: tutorError } = await supabase
+        let { data: tutorData, error: tutorError } = await supabase
           .from('tutor_profiles')
           .select('*')
           .eq('id', user.id)
           .single()
 
-        if (tutorError) {
+        // If tutor profile does not exist, create it
+        if (tutorError && tutorError.code === 'PGRST116') {
+          console.log('Tutor profile missing, creating...')
+          const { data: newTutor, error: createError } = await supabase
+            .from('tutor_profiles')
+            .insert({ id: user.id, is_verified: false })
+            .select()
+            .single()
+          if (createError) {
+            console.error('Error creating tutor profile:', createError)
+            setLoading(false)
+            return
+          }
+          tutorData = newTutor
+        } else if (tutorError) {
           console.error('Error loading tutor profile:', tutorError)
+          setLoading(false)
           return
         }
 
-        console.log('Tutor profile data loaded:', tutorData)
         setTutorProfile(tutorData)
         setEditedBio(tutorData.bio || '')
         setEditedRate(tutorData.hourly_rate?.toString() || '')
