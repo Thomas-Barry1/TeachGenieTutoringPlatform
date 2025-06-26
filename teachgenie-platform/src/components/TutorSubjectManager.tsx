@@ -165,7 +165,7 @@ export default function TutorSubjectManager({ tutorId }: { tutorId: string }) {
       </div>
 
       {tutorSubjects.length > 0 ? (
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-72 overflow-y-auto">
           {tutorSubjects.map(({ subject }) => (
             <div
               key={subject.id}
