@@ -69,12 +69,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     console.log('Starting signup process...')
     
-    // Set redirect URL based on environment
+    // Get the current URL for redirect
+    // NOTE: This redirectTo parameter is just a suggestion.
+    // Supabase will only redirect to URLs that are configured in your Supabase project settings.
+    // Make sure to add your production domain to Supabase Auth → URL Configuration → Redirect URLs
     let redirectTo: string
     if (typeof window !== 'undefined') {
       // Client-side: use current origin
       const currentPath = window.location.pathname
-      redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}`
+      redirectTo = `${window.location.origin}/auth/callback` //?next=${encodeURIComponent(currentPath)}`
     } else {
       // Server-side: use environment variable or default
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
