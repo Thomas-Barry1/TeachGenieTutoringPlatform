@@ -58,6 +58,7 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/inbox')
   ) {
     if (!session) {
+      console.log('Redirecting to login')
       return NextResponse.redirect(new URL('/auth/login', request.url))
     }
     return response
