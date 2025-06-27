@@ -153,9 +153,9 @@ export default function TutorsPage() {
         {filteredTutors.map(tutor => (
           <div
             key={tutor.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col min-h-[370px] max-h-[370px]"
           >
-            <div className="p-6">
+            <div className="p-6 flex flex-col h-full">
               <div className="flex items-center space-x-4">
                 <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-200">
                   {tutor.profile?.avatar_url ? (
@@ -203,8 +203,11 @@ export default function TutorsPage() {
               {tutor.bio && (
                 <p className="mt-4 text-gray-600 line-clamp-3">{tutor.bio}</p>
               )}
-              <div className="mt-4 flex flex-wrap gap-2">
-                {tutor.subjects.map(subject => (
+              <div
+                className="mt-4 flex flex-wrap gap-2 max-h-16 relative"
+                title={tutor.subjects.map(s => s.name).join(', ')}
+              >
+                {tutor.subjects.slice(0, 6).map(subject => (
                   <span
                     key={subject.id}
                     className="px-2 py-1 bg-primary-100 text-primary-800 text-sm rounded-full"
@@ -212,8 +215,11 @@ export default function TutorsPage() {
                     {subject.name}
                   </span>
                 ))}
+                {tutor.subjects.length > 6 && (
+                  <span className="px-2 py-1 bg-gray-200 text-gray-600 text-sm rounded-full">+{tutor.subjects.length - 6} more</span>
+                )}
               </div>
-              <div className="mt-6">
+              <div className="mt-auto pt-6">
                 <a
                   href={`/tutors/${tutor.id}`}
                   className="block w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
