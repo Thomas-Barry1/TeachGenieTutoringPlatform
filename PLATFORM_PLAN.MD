@@ -2,55 +2,19 @@
 
 ## Tech Stack
 - **Frontend**: Next.js 14 (App Router)
-- **Backend**: Supabase
-- **Deployment**: Vercel
-- **Authentication**: Supabase Auth
-- **Database**: PostgreSQL (via Supabase)
-- **Real-time**: Supabase Realtime
+- **Backend**: Supabase (PostgreSQL, Auth, Realtime)
 - **Email**: Resend
+- **Deployment**: Vercel
 - **File Storage**: Supabase Storage
+- **Styling**: Tailwind CSS
 
 ## Core Features (Phase 1)
 
 ### 1. User Management
-#### Database Schema
-```sql
--- Users table (extends Supabase auth)
-create table public.profiles (
-  id uuid references auth.users on delete cascade,
-  user_type text check (user_type in ('student', 'tutor')),
-  first_name text,
-  last_name text,
-  email text,
-  created_at timestamp with time zone default timezone('utc'::text, now()),
-  primary key (id)
-);
-
--- Tutor profiles
-create table public.tutor_profiles (
-  id uuid references public.profiles on delete cascade,
-  bio text,
-  hourly_rate decimal,
-  is_verified boolean default false,
-  primary key (id)
-);
-
--- Subject categories
-create table public.subjects (
-  id uuid default uuid_generate_v4(),
-  name text,
-  category text,
-  created_at timestamp with time zone default timezone('utc'::text, now()),
-  primary key (id)
-);
-
--- Tutor subjects (many-to-many)
-create table public.tutor_subjects (
-  tutor_id uuid references public.tutor_profiles on delete cascade,
-  subject_id uuid references public.subjects on delete cascade,
-  primary key (tutor_id, subject_id)
-);
-```
+- User profiles with role-based access (student/tutor)
+- Tutor profiles with bio, hourly rate, verification status
+- Subject management with many-to-many relationships
+- Profile image upload and management
 
 ### 2. Authentication & Authorization
 - Separate registration flows for tutors and students
@@ -59,267 +23,155 @@ create table public.tutor_subjects (
 - Protected routes based on user type
 
 ### 3. Tutoring Sessions
-#### Database Schema
-```sql
--- Sessions
-create table public.sessions (
-  id uuid default uuid_generate_v4(),
-  tutor_id uuid references public.tutor_profiles,
-  student_id uuid references public.profiles,
-  subject_id uuid references public.subjects,
-  start_time timestamp with time zone,
-  end_time timestamp with time zone,
-  status text check (status in ('scheduled', 'completed', 'cancelled')),
-  price decimal,
-  created_at timestamp with time zone default timezone('utc'::text, now()),
-  primary key (id)
-);
-
--- Session payments
-create table public.session_payments (
-  id uuid default uuid_generate_v4(),
-  session_id uuid references public.sessions,
-  amount decimal,
-  platform_fee decimal,
-  tutor_payout decimal,
-  payment_status text check (status in ('pending', 'completed', 'failed')),
-  created_at timestamp with time zone default timezone('utc'::text, now()),
-  primary key (id)
-);
-```
-
-#### Session Booking Flow
-1. Tutors can initiate session booking from:
-   - Student profiles
-   - Chat conversations
-   - Direct session creation
-2. Session booking includes:
-   - Date and time selection
-   - Flexible duration options:
-     - Preset durations (30min, 1hr, 1.5hr, 2hr)
-     - Custom duration in 15-minute increments
-     - Minimum duration of 15 minutes
-   - Subject selection (from tutor's available subjects)
-   - Rate management:
-     - Default rate from tutor's profile
-     - Adjustable per session
-     - Real-time price calculation
-     - Price = (Duration in hours × Hourly Rate)
-3. Security:
-   - Only tutors can create sessions
-   - Tutors can only create sessions where they are the tutor
-   - Students can view sessions they are part of
-   - Tutors can view and manage their own sessions
+- Session booking with flexible duration options
+- Real-time pricing calculation
+- Session status management (scheduled, completed, cancelled)
+- Payment integration with platform fees
 
 ### 4. Reviews & Ratings
-#### Database Schema
-```sql
--- Reviews
-create table public.reviews (
-  id uuid default uuid_generate_v4(),
-  session_id uuid references public.sessions,
-  student_id uuid references public.profiles,
-  tutor_id uuid references public.tutor_profiles,
-  rating integer check (rating >= 1 and rating <= 5),
-  comment text,
-  created_at timestamp with time zone default timezone('utc'::text, now()),
-  primary key (id)
-);
-```
+- Student reviews for tutors
+- Rating system (1-5 stars)
+- Review moderation and display
 
 ### 5. Real-time Chat
-#### Database Schema
-```sql
--- Chat rooms
-create table public.chat_rooms (
-  id uuid default uuid_generate_v4(),
-  created_at timestamp with time zone default timezone('utc'::text, now()),
-  primary key (id)
-);
-
--- Chat messages
-create table public.chat_messages (
-  id uuid default uuid_generate_v4(),
-  chat_room_id uuid references public.chat_rooms,
-  sender_id uuid references public.profiles,
-  content text,
-  is_read boolean default false,
-  read_at timestamp with time zone,
-  created_at timestamp with time zone default timezone('utc'::text, now()),
-  primary key (id)
-);
-
--- Message notifications
-create table public.message_notifications (
-  id uuid default uuid_generate_v4(),
-  user_id uuid references public.profiles,
-  message_id uuid references public.chat_messages,
-  is_read boolean default false,
-  created_at timestamp with time zone default timezone('utc'::text, now()),
-  primary key (id)
-);
-```
+- Direct messaging between users
+- Session-associated chats
+- Message notifications and read receipts
+- Real-time updates via Supabase Realtime
 
 ### 6. Email Notifications
-#### Implementation
-- **Service**: Resend for transactional emails
-- **Security**: Server-side API routes with authentication
-- **Rate Limiting**: Prevents spam by checking message frequency
-
-#### Use Cases
-1. **Message Notifications**: Email alerts for new chat messages
-2. **Session Updates**: Reminders and confirmations for tutoring sessions
-3. **Account Verification**: Email verification for new registrations
-
-#### API Endpoint
-- `POST /api/notify-message` - Sends email notifications
-- **Authentication**: Validates user session using Supabase Auth
-- **Error Handling**: Graceful fallback for email delivery failures
+- Server-side email delivery with Resend
+- Authentication-protected API routes
+- Rate limiting to prevent spam
+- Message notifications, session updates, account verification
 
 ## Frontend Structure
 
 ### Pages
-1. `/` - Landing page
-2. `/auth/*` - Authentication pages
-3. `/dashboard` - User dashboard (different views for tutors/students)
-4. `/tutors` - Tutor listing (student view)
-5. `/tutors/[id]` - Tutor profile (student view)
-6. `/sessions` - Session management (different views for tutors/students)
-7. `/chat` - Chat interface (different views for tutors/students)
-8. `/settings` - User settings
-9. `/tutor-dashboard` - Tutor-specific dashboard
-10. `/tutor-profile` - Tutor's own profile management
-11. `/inbox` - Message inbox (different views for tutors/students)
+- `/` - Landing page
+- `/auth/*` - Authentication pages
+- `/dashboard` - User dashboard (role-specific views)
+- `/tutors` - Tutor listing and profiles
+- `/sessions` - Session management
+- `/chat` - Chat interface
+- `/inbox` - Message inbox
+- `/settings` - User settings
 
 ### Components
-1. `Layout/`
-   - Header
-   - Navigation
-   - Footer
-2. `Auth/`
-   - LoginForm
-   - RegisterForm
-   - TutorRegistrationForm
-   - StudentRegistrationForm
-3. `Tutors/`
-   - TutorCard
-   - TutorList
-   - SubjectFilter
-   - TutorProfile
-   - TutorAvailability
-4. `Sessions/`
-   - SessionCard
-   - SessionForm
-   - SessionCalendar
-   - SessionDetails
-   - SessionBookingModal
-5. `Chat/`
-   - ChatWindow
-   - MessageList
-   - MessageInput
-   - ChatSidebar
-   - ConversationList
-6. `Reviews/`
-   - ReviewForm
-   - ReviewList
-   - RatingStars
-7. `Dashboard/`
-   - TutorDashboard
-   - UpcomingSessions
-   - PastSessions
-   - EarningsSummary
-8. `Messages/`
-   - InboxView
-   - ConversationThread
-   - MessageComposer
-   - UnreadMessages
+- **Layout**: Header, Navigation, Footer
+- **Auth**: LoginForm, RegisterForm, Role-specific forms
+- **Tutors**: TutorCard, TutorList, SubjectFilter, TutorProfile
+- **Sessions**: SessionCard, SessionForm, SessionCalendar
+- **Chat**: ChatWindow, MessageList, MessageInput
+- **Reviews**: ReviewForm, ReviewList, RatingStars
+- **Dashboard**: Role-specific dashboards and summaries
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
+- `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`
 
 ### Tutors
-- `GET /api/tutors`
-- `GET /api/tutors/[id]`
-- `GET /api/tutors/subjects`
+- `GET /api/tutors`, `GET /api/tutors/[id]`, `GET /api/tutors/subjects`
 
 ### Sessions
-- `POST /api/sessions`
-- `GET /api/sessions`
-- `GET /api/sessions/[id]`
-- `PATCH /api/sessions/[id]`
+- `POST /api/sessions`, `GET /api/sessions`, `GET /api/sessions/[id]`, `PATCH /api/sessions/[id]`
 
 ### Reviews
-- `POST /api/reviews`
-- `GET /api/reviews/tutor/[id]`
+- `POST /api/reviews`, `GET /api/reviews/tutor/[id]`
 
 ### Chat
-- `GET /api/chat/rooms`
-- `GET /api/chat/messages/[roomId]`
-- `POST /api/chat/messages`
-- `GET /api/chat/unread-count`
-- `PATCH /api/chat/messages/[id]/read`
-- `GET /api/chat/conversations` (different for tutors/students)
+- `GET /api/chat/rooms`, `GET /api/chat/messages/[roomId]`, `POST /api/chat/messages`
+- `GET /api/chat/unread-count`, `PATCH /api/chat/messages/[id]/read`
 
 ### Notifications
 - `POST /api/notify-message` - Send email notifications
 
-### Dashboard
-- `GET /api/dashboard/tutor`
-- `GET /api/dashboard/upcoming-sessions`
-- `GET /api/dashboard/past-sessions`
-- `GET /api/dashboard/earnings`
+## Messaging System
+
+### Direct Messaging
+- Students can message tutors directly from profiles
+- Messages organized in chat rooms with multiple participants
+- Read receipts, timestamps, and real-time notifications
+
+### Chat Room Types
+1. **Direct Messages**: One-on-one conversations, persistent history
+2. **Session Chats**: Session-associated, limited to participants
+
+### Security & Access Control
+- RLS policies ensure users only access their own chat rooms
+- Messages only visible to chat room participants
+- Proper user authentication and authorization
+
+## Legal Compliance
+
+### Terms of Service & Privacy Policy
+- Markdown-based legal documents with server-side rendering
+- Required agreement during user registration
+- Public access to legal documents without authentication
+- Version control for audit trail
+
+### Legal Documents
+1. **Terms of Service** (`TERMS.md`)
+   - User eligibility, marketplace nature, payment policies
+   - User conduct, dispute resolution, DMCA policy
+
+2. **Privacy Policy** (`PRIVACY.md`)
+   - Data collection, sharing policies, user rights
+   - Security measures, children's privacy, update procedures
+
+### Technical Implementation
+- Server-side HTML generation from Markdown using `marked` library
+- Tailwind Typography for consistent formatting
+- Public routes `/TERMS` and `/PRIVACY`
+- Checkbox agreement required for registration
+
+### Compliance Requirements
+- Explicit user consent with checkbox confirmation
+- Public access to legal documents
+- Version control for document changes
+- GDPR-compliant data handling practices
 
 ## Future Enhancements (Phase 2+)
 
 1. **Tutor Verification System**
-   - Document upload
-   - Background check integration
+   - Document upload and background checks
    - Qualification verification
 
 2. **Advanced Scheduling**
-   - Calendar integration
-   - Recurring sessions
+   - Calendar integration and recurring sessions
    - Availability management
 
 3. **Video Integration**
-   - Zoom API integration
-   - Session recording
-   - Screen sharing
+   - Zoom API integration and session recording
+   - Screen sharing capabilities
 
-4. **Learning Materials**
-   - File sharing
-   - Resource library
-   - Progress tracking
-
-5. **Payment Integration**
+4. **Payment Integration**
    - Stripe payment processing
-   - Subscription plans
-   - Multiple currencies
-   - Automated payouts
+   - Subscription plans and automated payouts
+
+5. **Learning Materials**
+   - File sharing and resource library
+   - Progress tracking
 
 ## Security Considerations
 
 1. **Data Protection**
-   - Encrypt sensitive data
-   - Implement row-level security in Supabase
+   - Row-level security in Supabase
+   - Encrypted data transmission
    - Regular security audits
 
 2. **Email Security**
    - Server-side email delivery
-   - Authentication validation for notifications
-   - Rate limiting to prevent abuse
-   - Secure API key management
+   - Authentication validation
+   - Rate limiting and abuse prevention
 
 3. **User Privacy**
    - GDPR compliance
    - Data retention policies
-   - Privacy policy
+   - Privacy policy enforcement
 
-## Deployment Strategy
+## Development Phases
 
 1. **Environment Setup**
    - Development
@@ -631,3 +483,74 @@ create table public.message_notifications (
    - Efficient message loading
    - Optimized real-time subscriptions
    - Proper cleanup of old messages 
+
+## Legal Compliance
+
+### Terms of Service & Privacy Policy
+- **Implementation**: Markdown-based legal documents with server-side rendering
+- **Integration**: Required agreement during user registration
+- **Accessibility**: Public access to legal documents without authentication
+- **Version Control**: Legal documents tracked in Git for audit trail
+
+### Legal Documents
+1. **Terms of Service** (`TERMS.md`)
+   - User eligibility requirements (18+ or parent/guardian consent)
+   - Marketplace nature and independent contractor status
+   - Payment and refund policies
+   - User conduct and content guidelines
+   - Dispute resolution and arbitration procedures
+   - DMCA policy and copyright protection
+   - Indemnification and liability limitations
+
+2. **Privacy Policy** (`PRIVACY.md`)
+   - Data collection and usage practices
+   - Information sharing policies
+   - User rights and choices (access, correction, deletion)
+   - Data security measures
+   - Children's privacy protection (COPPA compliance)
+   - Policy update procedures and notification methods
+
+### Technical Implementation
+- **Rendering**: Server-side HTML generation from Markdown using `marked` library
+- **Styling**: Tailwind Typography plugin for consistent legal document formatting
+- **Routes**: `/TERMS` and `/PRIVACY` pages for public access
+- **Registration**: Checkbox agreement required for account creation
+- **Storage**: Legal documents stored as Markdown files in version control
+
+### Compliance Requirements
+1. **User Consent**
+   - Explicit agreement to Terms of Service and Privacy Policy
+   - Checkbox confirmation during registration
+   - Clear indication of agreement requirement
+
+2. **Document Accessibility**
+   - Public access to legal documents
+   - No authentication required to view terms
+   - Clear navigation to legal pages
+
+3. **Update Procedures**
+   - Version control for document changes
+   - User notification of policy updates
+   - Continued use constitutes acceptance of new terms
+
+4. **Data Protection**
+   - GDPR-compliant data handling practices
+   - User rights for data access and deletion
+   - Secure data storage and transmission
+
+### Future Legal Considerations
+1. **Regional Compliance**
+   - GDPR (European Union)
+   - CCPA (California)
+   - COPPA (Children's Privacy)
+   - State-specific privacy laws
+
+2. **Industry-Specific Requirements**
+   - Educational platform regulations
+   - Payment processing compliance
+   - Background check requirements for tutors
+
+3. **Document Management**
+   - Automated legal document versioning
+   - User notification system for updates
+   - Legal document analytics and tracking 

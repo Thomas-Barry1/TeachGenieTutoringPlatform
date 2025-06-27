@@ -39,3 +39,5 @@ An AI-powered online tutoring platform built with Next.js 14 and Supabase.
 - Secure authentication with Supabase Auth
 - Server-side email notifications with Resend
 - Protected API routes with proper session validation
+- Legal compliance with Terms of Service and Privacy Policy
+- User consent management and data protection practices

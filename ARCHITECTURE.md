@@ -2,10 +2,7 @@
 
 ## Tech Stack
 - **Frontend**: Next.js 14 (App Router)
-- **Backend**: Supabase
-- **Database**: PostgreSQL (via Supabase)
-- **Authentication**: Supabase Auth
-- **Real-time**: Supabase Realtime
+- **Backend**: Supabase (PostgreSQL, Auth, Realtime)
 - **Email**: Resend
 - **Deployment**: Vercel
 - **Styling**: Tailwind CSS
@@ -64,6 +61,7 @@ RESEND_API_KEY=your_resend_api_key
    - Extends Supabase auth
    - Stores basic user information
    - User types: 'student' or 'tutor'
+   - Includes avatar_url for profile images
 
 2. `tutor_profiles`
    - Additional information for tutors
@@ -120,39 +118,24 @@ RESEND_API_KEY=your_resend_api_key
 
 ### Row Level Security (RLS)
 - All tables have RLS enabled
-- Policies ensure users can only access their own data
-- Public access is granted where appropriate (e.g., tutor listings)
+- Users can only access their own data
+- Public access granted where appropriate (tutor listings)
 
 ### Key RLS Policies
-1. Profiles
-   - Users can view and update their own profile
-   - Authenticated users can create profiles
-
-2. Tutor Profiles
-   - Public read access
-   - Tutors can update their own profile
-
-3. Subjects
-   - Public read access
-   - Admin-only write access
-
-4. Tutor Subjects
-   - Public read access
-   - Tutors can manage their own subjects
-
-5. Sessions
-   - Users can view their own sessions
-   - Only tutors can create sessions
-   - Tutors can only create sessions where they are the tutor
-   - Tutors can update their own sessions
+- **Profiles**: Users view/update own profile, authenticated users create profiles
+- **Tutor Profiles**: Public read, tutors update own profile
+- **Subjects**: Public read, admin-only write
+- **Sessions**: Users view own sessions, only tutors create sessions
+- **Chat**: Users access only their chat rooms and messages
 
 ## Session Management
 
 ### Session Creation
-1. **Permissions**
-   - Only tutors can create sessions
-   - Tutors must be creating a session where they are the tutor
-   - Tutors must have a verified tutor profile
+- Only tutors can create sessions
+- Tutors must create sessions where they are the tutor
+- Session details: date/time, duration (15min increments), subject, rate
+- Price = Duration in hours × Hourly Rate
+- Students receive notifications, can view but not modify
 
 2. **Session Booking Flow**
    - Tutors can initiate booking from chat or student profiles
@@ -220,93 +203,63 @@ RESEND_API_KEY=your_resend_api_key
 2. **Session Updates**: Reminders and confirmations for tutoring sessions
 3. **Account Verification**: Email verification for new registrations
 
-## Important Decisions
+## Legal Document Management
+- **Format**: Markdown files (`TERMS.md`, `PRIVACY.md`)
+- **Rendering**: Server-side with `marked` library + Tailwind Typography
+- **Integration**: Required agreement during registration
+- **Access**: Public routes `/TERMS` and `/PRIVACY`
 
-1. **Database Design**
-   - Separate profiles and tutor_profiles tables for better data organization
-   - Many-to-many relationship for tutor subjects
-   - Comprehensive session tracking with payment integration
+## Profile Images
 
-2. **Security**
-   - RLS policies for granular access control
-   - No direct database access from frontend
-   - Secure authentication flow with proper cookie management
-   - Server-side API routes for sensitive operations
-   - Email notifications with authentication validation
+### Database Changes
+```sql
+ALTER TABLE public.profiles ADD COLUMN avatar_url TEXT;
+```
 
-3. **Real-time Features**
-   - Chat system for session communication
-   - Message notifications
-   - Session status updates
+### Storage Structure
+```
+profile-images/
+├── {user_id}/
+│   ├── avatar.jpg
+│   └── avatar_thumbnail.jpg
+```
 
-4. **UI/UX**
-   - Responsive design with Tailwind CSS
-   - Clear separation of tutor and student interfaces
-   - Intuitive subject management
+### Features
+- **Upload**: Drag and drop interface with image preview
+- **Processing**: Automatic resizing, thumbnail generation (200x200), WebP conversion
+- **Validation**: jpg/jpeg/png/webp, max 5MB, 200x200px to 2000x2000px
+- **Fallback**: Default avatar for new users, placeholder during loading
+
+### Security
+-- Users can upload their own profile images"
+
+-- Anyone can view profile images
+
+-- Users can manage their own profile images
+
+### Implementation
+- **Storage**: Supabase Storage with profile-images bucket
+- **Processing**: Image optimization pipeline with automatic resizing
+- **Security**: Signed URLs with expiration, CORS configuration, rate limiting
+- **Performance**: Lazy loading, progressive loading, browser caching
 
 ## Development Guidelines
 
-1. **Type Safety**
-   - Use TypeScript for all components
-   - Define database types in `types/database.ts`
-   - Use proper type definitions for Supabase queries
+### Type Safety
+- Use TypeScript for all components
+- Define database types in `types/database.ts`
+- Use proper type definitions for Supabase queries
 
-2. **Component Structure**
-   - Keep components focused and reusable
-   - Use proper prop typing
-   - Implement error boundaries where needed
+### Security
+- Always use RLS policies
+- Never expose sensitive data
+- Validate user input
+- Use server-side API routes for sensitive operations
 
-3. **State Management**
-   - Use React Context for global state
-   - Keep component state local when possible
-   - Use proper loading and error states
-
-4. **Database Operations**
-   - Always use RLS policies
-   - Handle errors appropriately
-   - Use proper TypeScript types for queries
-
-## Future Considerations
-
-1. **Scalability**
-   - Consider pagination for large data sets
-   - Implement caching where appropriate
-   - Monitor database performance
-
-2. **Features**
-   - Video integration for sessions
-   - Advanced scheduling system
-   - Payment processing improvements
-   - Enhanced email notification system
-
-3. **Security**
-   - Regular security audits
-   - Enhanced verification system
-   - Rate limiting implementation
-
-## Deployment
-
-1. **Environment**
-   - Development: Local with Supabase
-   - Production: Vercel + Supabase
-   - Environment variables for configuration
-
-2. **Monitoring**
-   - Error tracking
-   - Performance monitoring
-   - Usage analytics
-
-## Maintenance
-
-1. **Database**
-   - Regular backups
-   - Schema migrations
-   - Performance optimization
-
-2. **Code**
-   - Regular dependency updates
-   - Code quality checks
-   - Documentation updates
+### State Management
+- Use React Context for global state
+- Keep component state local when possible
+- Handle loading and error states properly
 
 ## Common Issues & Solutions
 
@@ -355,36 +308,17 @@ RESEND_API_KEY=your_resend_api_key
 ## LLM Rules & Context
 
 ### Project Context
-- This is a tutoring platform built with Next.js 14 and Supabase
-- The platform connects students with tutors for online tutoring sessions
+- Tutoring platform connecting students with tutors
 - All database operations must respect RLS policies
-- Authentication is handled through Supabase Auth
+- Authentication handled through Supabase Auth
+- Role-based access (student/tutor)
 
 ### Important Rules
-1. **Database Operations**
-   - Always check RLS policies before suggesting database changes
-   - Never expose sensitive data in queries
-   - Use proper TypeScript types for all database operations
-
-2. **Authentication**
-   - Respect user roles (student/tutor)
-   - Handle authentication errors gracefully
-   - Maintain proper session management
-
-3. **Security**
-   - Never suggest exposing API keys or sensitive credentials
-   - Always validate user input
-   - Follow Supabase security best practices
-
-4. **Code Style**
-   - Use TypeScript for all new code
-   - Follow Next.js 14 best practices
-   - Maintain consistent error handling patterns
-
-5. **Feature Implementation**
-   - Check existing implementations before suggesting new ones
-   - Consider both student and tutor perspectives
-   - Maintain platform scalability
+1. **Database Operations**: Always check RLS policies, never expose sensitive data
+2. **Authentication**: Respect user roles, handle errors gracefully
+3. **Security**: Never expose API keys, always validate input
+4. **Code Style**: Use TypeScript, follow Next.js 14 best practices
+5. **Feature Implementation**: Check existing implementations, consider both perspectives
 
 ### Common Pitfalls to Avoid
 1. **Authentication**
@@ -418,12 +352,7 @@ RESEND_API_KEY=your_resend_api_key
    - Log errors appropriately
    - Handle edge cases gracefully
 
-3. **State Management**
-   - Use React Context for global state
-   - Keep component state local when possible
-   - Handle loading and error states properly
-
-4. **Testing (When Implemented)**
+3. **Testing (When Implemented)**
    - Write tests for critical paths
    - Test error scenarios
    - Maintain good test coverage 
