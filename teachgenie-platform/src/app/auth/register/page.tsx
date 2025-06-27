@@ -9,11 +9,19 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [userType, setUserType] = useState<'student' | 'tutor'>('student')
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsLoading(true)
     setError('')
+
+    if (!termsAccepted || !privacyAccepted) {
+      setError('You must accept the Terms of Service and Privacy Policy to create an account.')
+      setIsLoading(false)
+      return
+    }
 
     const formData = new FormData(event.currentTarget)
     const email = formData.get('email') as string
@@ -142,6 +150,54 @@ export default function RegisterPage() {
               </div>
             </div>
           </div>
+
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                required
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+              />
+              <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer">
+                I have read and agree to the{' '}
+                <Link
+                  href="/TERMS"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary-600 hover:text-primary-500 underline"
+                >
+                  Terms of Service
+                </Link>
+              </label>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <input
+                id="privacy"
+                name="privacy"
+                type="checkbox"
+                required
+                className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                checked={privacyAccepted}
+                onChange={(e) => setPrivacyAccepted(e.target.checked)}
+              />
+              <label htmlFor="privacy" className="text-sm text-gray-700 cursor-pointer">
+                I have read and agree to the{' '}
+                <Link
+                  href="/PRIVACY"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary-600 hover:text-primary-500 underline"
+                >
+                  Privacy Policy
+                </Link>
+              </label>
+            </div>
+        </div>
 
           {error && (
             <div className="rounded-md bg-red-50 p-4">
