@@ -53,6 +53,9 @@ export async function middleware(request: NextRequest) {
   // Protected routes handling
   if (
     request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/profile') ||
+    request.nextUrl.pathname.startsWith('/sessions') ||
+    request.nextUrl.pathname.startsWith('/subjects') ||
     request.nextUrl.pathname.startsWith('/tutor-dashboard') ||
     request.nextUrl.pathname.startsWith('/tutor-profile') ||
     request.nextUrl.pathname.startsWith('/inbox')
@@ -74,5 +77,8 @@ export const config = {
     '/tutor-dashboard/:path*',
     '/tutor-profile/:path*',
     '/inbox/:path*',
+    '/sessions/:path*',
+    '/subjects/:path*',
+    '/profile/:path*',
   ],
 } 

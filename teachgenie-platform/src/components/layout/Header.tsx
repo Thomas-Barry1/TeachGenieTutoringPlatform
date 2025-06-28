@@ -1,8 +1,8 @@
 'use client'
 
 import { Fragment, useEffect, useState } from 'react'
-import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Disclosure, Menu, MenuButton, MenuItem, MenuItems, Transition } from '@headlessui/react'
+import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
@@ -11,7 +11,6 @@ import { createClient } from '@/lib/supabase/client'
 const navigation = [
   { name: 'Home', href: '/' },
   { name: 'Find Tutors', href: '/tutors' },
-  { name: 'Dashboard', href: '/dashboard' },
   { name: 'Messages', href: '/inbox' },
 ]
 
@@ -22,7 +21,10 @@ function classNames(...classes: string[]) {
 export default function Header() {
   const pathname = usePathname()
   const { user, signOut } = useAuth()
-  const [profile, setProfile] = useState<{ avatar_url: string | null } | null>(null)
+  const [profile, setProfile] = useState<{ 
+    avatar_url: string | null
+    user_type: 'student' | 'tutor' | null
+  } | null>(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -31,7 +33,7 @@ export default function Header() {
       const supabase = createClient()
       const { data, error } = await supabase
         .from('profiles')
-        .select('avatar_url')
+        .select('avatar_url, user_type')
         .eq('id', user.id)
         .single()
 
@@ -42,6 +44,8 @@ export default function Header() {
 
     loadProfile()
   }, [user])
+
+  const isTutor = profile?.user_type === 'tutor'
 
   return (
     <Disclosure as="nav" className="bg-white shadow">
@@ -55,7 +59,7 @@ export default function Header() {
                     TeachGenie
                   </Link>
                 </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <div className="hidden sm:ml-6 sm:flex sm:space-x-8 items-stretch">
                   {navigation.map((item) => (
                     <Link
                       key={item.name}
@@ -64,19 +68,102 @@ export default function Header() {
                         pathname === item.href
                           ? 'border-primary-500 text-gray-900'
                           : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium'
+                        'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium h-full'
                       )}
                     >
                       {item.name}
                     </Link>
                   ))}
+                  {/* Dashboard Dropdown */}
+                  {(
+                    <Menu as="div" className="relative flex items-stretch">
+                      <MenuButton
+                        className={classNames(
+                          (pathname.startsWith('/dashboard') || pathname.startsWith('/profile') || pathname.startsWith('/sessions') || (isTutor && pathname.startsWith('/subjects')))
+                            ? 'border-primary-500 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                          'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium h-full focus:outline-none bg-white'
+                        )}
+                        style={{ height: '100%' }}
+                      >
+                        Dashboard
+                        <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
+                      </MenuButton>
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-200"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <MenuItems className="absolute left-0 top-full z-10 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <MenuItem>
+                            {({ active }) => (
+                              <Link
+                                href="/dashboard"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Dashboard
+                              </Link>
+                            )}
+                          </MenuItem>
+                          <MenuItem>
+                            {({ active }) => (
+                              <Link
+                                href="/dashboard"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Profile
+                              </Link>
+                            )}
+                          </MenuItem>
+                          {isTutor && (
+                            <MenuItem>
+                              {({ active }) => (
+                                <Link
+                                  href="/subjects"
+                                  className={classNames(
+                                    active ? 'bg-gray-100' : '',
+                                    'block px-4 py-2 text-sm text-gray-700'
+                                  )}
+                                >
+                                  Subjects
+                                </Link>
+                              )}
+                            </MenuItem>
+                          )}
+                          <MenuItem>
+                            {({ active }) => (
+                              <Link
+                                href="/sessions"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Sessions
+                              </Link>
+                            )}
+                          </MenuItem>
+                        </MenuItems>
+                      </Transition>
+                    </Menu>
+                  )}
                 </div>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:items-center">
                 {user ? (
                   <Menu as="div" className="relative ml-3">
                     <div>
-                      <Menu.Button className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                      <MenuButton className="flex rounded-full bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
                         <span className="sr-only">Open user menu</span>
                         {profile?.avatar_url ? (
                           <img
@@ -87,7 +174,7 @@ export default function Header() {
                         ) : (
                           <div className="h-8 w-8 rounded-full bg-gray-200" />
                         )}
-                      </Menu.Button>
+                      </MenuButton>
                     </div>
                     <Transition
                       as={Fragment}
@@ -98,11 +185,11 @@ export default function Header() {
                       leaveFrom="transform opacity-100 scale-100"
                       leaveTo="transform opacity-0 scale-95"
                     >
-                      <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <Menu.Item>
+                      <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                        <MenuItem>
                           {({ active }) => (
                             <Link
-                              href="/settings"
+                              href="/dashboard"
                               className={classNames(
                                 active ? 'bg-gray-100' : '',
                                 'block px-4 py-2 text-sm text-gray-700'
@@ -111,8 +198,8 @@ export default function Header() {
                               Settings
                             </Link>
                           )}
-                        </Menu.Item>
-                        <Menu.Item>
+                        </MenuItem>
+                        <MenuItem>
                           {({ active }) => (
                             <button
                               onClick={() => signOut()}
@@ -124,8 +211,8 @@ export default function Header() {
                               Sign out
                             </button>
                           )}
-                        </Menu.Item>
-                      </Menu.Items>
+                        </MenuItem>
+                      </MenuItems>
                     </Transition>
                   </Menu>
                 ) : (
@@ -175,6 +262,62 @@ export default function Header() {
                   {item.name}
                 </Disclosure.Button>
               ))}
+              
+              {/* Mobile Dashboard Menu */}
+              {(
+                <>
+                  <Disclosure.Button
+                    as={Link}
+                    href="/dashboard"
+                    className={classNames(
+                      pathname === '/dashboard'
+                        ? 'bg-primary-50 border-primary-500 text-primary-700'
+                        : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
+                      'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                    )}
+                  >
+                    Dashboard
+                  </Disclosure.Button>
+                  {/* <Disclosure.Button
+                    as={Link}
+                    href="/profile"
+                    className={classNames(
+                      pathname === '/dashboard'
+                        ? 'bg-primary-50 border-primary-500 text-primary-700'
+                        : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
+                      'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                    )}
+                  >
+                    Profile
+                  </Disclosure.Button> */}
+                  {isTutor && (
+                    <Disclosure.Button
+                      as={Link}
+                      href="/subjects"
+                      className={classNames(
+                        pathname === '/subjects'
+                          ? 'bg-primary-50 border-primary-500 text-primary-700'
+                          : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
+                        'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                      )}
+                    >
+                      Subjects
+                    </Disclosure.Button>
+                  )}
+                  <Disclosure.Button
+                    as={Link}
+                    href="/sessions"
+                    className={classNames(
+                      pathname === '/sessions'
+                        ? 'bg-primary-50 border-primary-500 text-primary-700'
+                        : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
+                      'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                    )}
+                  >
+                    Sessions
+                  </Disclosure.Button>
+                </>
+              )}
             </div>
             <div className="border-t border-gray-200 pb-3 pt-4">
               {user ? (
