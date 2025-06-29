@@ -64,7 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No user data returned')
     }
     console.log('AuthProvider: Sign in successful, redirecting to dashboard')
-    router.push('/dashboard')
+    // Use replace to avoid navigation conflicts and add a small delay
+    setTimeout(() => {
+      router.replace('/dashboard')
+    }, 100)
   }
 
   const signUp = async (
@@ -130,7 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error
     }
     console.log('AuthProvider: Sign out successful, redirecting to home')
-    router.push('/')
+    router.replace('/')
   }
 
   console.log('AuthProvider: Current state - user:', user ? 'exists' : 'none', 'loading:', loading)
