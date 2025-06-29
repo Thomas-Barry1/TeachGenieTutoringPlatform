@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   console.log('Middleware running for:', request.nextUrl.pathname)
+  console.log('Request headers:', Object.fromEntries(request.headers.entries()))
   
   let response = NextResponse.next({
     request: {
@@ -16,9 +17,12 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         get(name: string) {
-          return request.cookies.get(name)?.value
+          const cookie = request.cookies.get(name)?.value
+          console.log(`Getting cookie ${name}:`, cookie ? 'exists' : 'missing')
+          return cookie
         },
         set(name: string, value: string, options: CookieOptions) {
+          console.log(`Setting cookie ${name}`)
           response.cookies.set({
             name,
             value,
@@ -26,6 +30,7 @@ export async function middleware(request: NextRequest) {
           })
         },
         remove(name: string, options: CookieOptions) {
+          console.log(`Removing cookie ${name}`)
           response.cookies.set({
             name,
             value: '',
@@ -38,6 +43,13 @@ export async function middleware(request: NextRequest) {
 
   const { data: { session } } = await supabase.auth.getSession()
   console.log('Session in middleware:', session ? 'exists' : 'none')
+  if (session) {
+    console.log('Session user ID:', session.user.id)
+  }
+
+  // Check if this is a client-side navigation
+  const isClientNavigation = request.headers.get('x-nextjs-data') !== null || 
+                            request.headers.get('x-requested-with') === 'XMLHttpRequest'
 
   // Auth routes handling
   if (request.nextUrl.pathname.startsWith('/auth')) {
@@ -87,6 +99,6 @@ export const config = {
     '/subjects/:path*',
     '/tutor-dashboard/:path*',
     '/tutor-profile/:path*',
-    '/inbox/:path*',
+    // '/inbox/:path*', // Temporarily removed to test client-side navigation
   ],
 } 

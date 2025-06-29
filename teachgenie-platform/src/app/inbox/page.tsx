@@ -3,7 +3,8 @@
 import { useEffect, useState, Suspense } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatParticipant {
   user_id: string;
@@ -59,6 +60,8 @@ type Profile = {
 };
 
 function InboxPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [messages, setMessages] = useState<TransformedChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +75,21 @@ function InboxPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  // Client-side authentication check
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.log('User not authenticated, redirecting to login');
+      router.replace('/auth/login');
+    }
+  }, [user, authLoading, router]);
+
+  // Set current user ID from auth context
+  useEffect(() => {
+    if (user) {
+      setCurrentUserId(user.id);
+    }
+  }, [user]);
 
   useEffect(() => {
     const recipient = searchParams.get('recipient');
@@ -90,14 +108,6 @@ function InboxPage() {
         });
     }
   }, [searchParams, supabase]);
-
-  useEffect(() => {
-    async function fetchUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-    }
-    fetchUser();
-  }, [supabase]);
 
   useEffect(() => {
     async function fetchMessages() {
@@ -319,6 +329,23 @@ function InboxPage() {
       setError('An unexpected error occurred');
     }
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render anything if user is not authenticated (will redirect)
+  if (!user) {
+    return null;
+  }
 
   if (loading) {
     return (
