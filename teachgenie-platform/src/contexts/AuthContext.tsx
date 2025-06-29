@@ -26,8 +26,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
+    console.log('AuthProvider: Setting up auth listeners')
+    
     // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('AuthProvider: Initial session check:', session ? 'exists' : 'none')
       setUser(session?.user ?? null)
       setLoading(false)
     })
@@ -35,15 +38,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for changes on auth state
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('AuthProvider: Auth state change:', event, session ? 'user exists' : 'no user')
       setUser(session?.user ?? null)
       setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      console.log('AuthProvider: Cleaning up auth listeners')
+      subscription.unsubscribe()
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
+    console.log('AuthProvider: Signing in user:', email)
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -55,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!data.user) {
       throw new Error('No user data returned')
     }
-    console.log('Redirecting to dashboard from signIn')
+    console.log('AuthProvider: Sign in successful, redirecting to dashboard')
     router.push('/dashboard')
   }
 
@@ -115,10 +123,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
+    console.log('AuthProvider: Signing out user')
     const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    if (error) {
+      console.error('Sign out error:', error)
+      throw error
+    }
+    console.log('AuthProvider: Sign out successful, redirecting to home')
     router.push('/')
   }
+
+  console.log('AuthProvider: Current state - user:', user ? 'exists' : 'none', 'loading:', loading)
 
   return (
     <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
