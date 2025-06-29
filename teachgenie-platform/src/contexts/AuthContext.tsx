@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!data.user) {
       throw new Error('No user data returned')
     }
+    console.log('Redirecting to dashboard from signIn')
     router.push('/dashboard')
   }
 

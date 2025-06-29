@@ -45,6 +45,7 @@ export async function middleware(request: NextRequest) {
     }
     
     if (session) {
+      console.log('Redirecting to dashboard from middleware')
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
     return response
