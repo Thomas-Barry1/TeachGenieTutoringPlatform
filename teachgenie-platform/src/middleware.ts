@@ -59,8 +59,8 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/tutor-dashboard') ||
     request.nextUrl.pathname.startsWith('/tutor-profile') ||
     request.nextUrl.pathname.startsWith('/inbox')
-    console.log("Pathname: ", request.nextUrl.pathname)
   ) {
+    console.log('Protected route accessed')
     if (!session) {
       console.log('Redirecting to login')
       return NextResponse.redirect(new URL('/auth/login', request.url))
