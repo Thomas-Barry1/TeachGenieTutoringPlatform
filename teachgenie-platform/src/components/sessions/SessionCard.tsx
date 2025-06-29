@@ -38,6 +38,19 @@ export default function SessionCard({ session, userType, onStatusChange, onDelet
     }
   }
 
+  const getPaymentStatusColor = (paymentStatus: string) => {
+    switch (paymentStatus) {
+      case 'paid':
+        return 'bg-green-100 text-green-800'
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'failed':
+        return 'bg-red-100 text-red-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
   const handleDelete = async () => {
     if (onDelete && confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
       await onDelete(session.id)
@@ -54,13 +67,24 @@ export default function SessionCard({ session, userType, onStatusChange, onDelet
             </h3>
             <p className="text-gray-600">{session.subject.name}</p>
           </div>
-          <span
-            className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-              session.status
-            )}`}
-          >
-            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-          </span>
+          <div className="flex flex-col items-end space-y-2">
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
+                session.status
+              )}`}
+            >
+              {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
+            </span>
+            {session.payment_status && (
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(
+                  session.payment_status
+                )}`}
+              >
+                {session.payment_status.charAt(0).toUpperCase() + session.payment_status.slice(1)}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="mt-4 space-y-2">
@@ -113,6 +137,18 @@ export default function SessionCard({ session, userType, onStatusChange, onDelet
             ${session.price}
           </div>
         </div>
+
+        {/* Payment button for students with unpaid sessions */}
+        {userType === 'student' && session.payment_status === 'pending' && session.status != 'cancelled' && (
+          <div className="mt-6">
+            <a
+              href={`/sessions/${session.id}/payment`}
+              className="block w-full text-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Pay Now (${session.price})
+            </a>
+          </div>
+        )}
 
         {session.status === 'scheduled' && userType === 'tutor' && onStatusChange && (
           <div className="mt-6 flex space-x-4">

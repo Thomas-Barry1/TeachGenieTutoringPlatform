@@ -15,7 +15,7 @@
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
     "@stripe/react-stripe-js": "^3.7.0",
-    "@stripe/stripe-js": "^7.3.1",
+    "@stripe/stripe-js": "^7.4.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.8",
     "@tailwindcss/typography": "^0.5.16",
@@ -27,6 +27,7 @@
     "react-dropzone": "^14.3.8",
     "react-hot-toast": "^2.5.2",
     "resend": "^4.6.0",
+    "stripe": "^18.2.1",
     "tailwind-merge": "^3.3.0"
   },
   "devDependencies": {

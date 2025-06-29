@@ -37,6 +37,8 @@ export interface Session {
   end_time: string
   status: 'scheduled' | 'completed' | 'cancelled'
   price: number
+  payment_status?: 'pending' | 'paid' | 'failed' | 'refunded'
+  payment_intent_id?: string
   created_at: string
 }
 
@@ -46,8 +48,9 @@ export interface SessionPayment {
   amount: number
   platform_fee: number
   tutor_payout: number
-  stripe_payment_id: string
-  status: 'pending' | 'completed' | 'failed'
+  stripe_payment_intent_id?: string
+  stripe_transfer_id?: string
+  status: 'pending' | 'completed' | 'failed' | 'refunded'
   created_at: string
 }
 

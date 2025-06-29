@@ -48,6 +48,8 @@ CREATE TABLE public.sessions (
   end_time TIMESTAMP WITH TIME ZONE NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('scheduled', 'completed', 'cancelled')),
   price DECIMAL CHECK (price >= 0),
+  payment_status TEXT DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
+  payment_intent_id TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
 );
@@ -59,8 +61,9 @@ CREATE TABLE public.session_payments (
   amount DECIMAL NOT NULL CHECK (amount >= 0),
   platform_fee DECIMAL CHECK (platform_fee >= 0),
   tutor_payout DECIMAL CHECK (tutor_payout >= 0),
-  stripe_payment_id TEXT,
-  status TEXT CHECK (status IN ('pending', 'completed', 'failed')),
+  stripe_payment_intent_id TEXT,
+  stripe_transfer_id TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
 );
@@ -119,6 +122,8 @@ CREATE INDEX IF NOT EXISTS idx_sessions_tutor_id ON public.sessions(tutor_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_student_id ON public.sessions(student_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_status ON public.sessions(status);
 CREATE INDEX IF NOT EXISTS idx_sessions_start_time ON public.sessions(start_time);
+CREATE INDEX IF NOT EXISTS idx_sessions_payment_status ON public.sessions(payment_status);
+CREATE INDEX IF NOT EXISTS idx_sessions_payment_intent_id ON public.sessions(payment_intent_id);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_room_id ON public.chat_messages(chat_room_id);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON public.chat_messages(created_at);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_sender_id ON public.chat_messages(sender_id);
@@ -126,6 +131,9 @@ CREATE INDEX IF NOT EXISTS idx_reviews_tutor_id ON public.reviews(tutor_id);
 CREATE INDEX IF NOT EXISTS idx_reviews_session_id ON public.reviews(session_id);
 CREATE INDEX IF NOT EXISTS idx_profiles_user_type ON public.profiles(user_type);
 CREATE INDEX IF NOT EXISTS idx_tutor_profiles_verified ON public.tutor_profiles(is_verified);
+CREATE INDEX IF NOT EXISTS idx_session_payments_session_id ON public.session_payments(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_payments_status ON public.session_payments(status);
+CREATE INDEX IF NOT EXISTS idx_session_payments_stripe_payment_intent_id ON public.session_payments(stripe_payment_intent_id);
 
 -- Row Level Security (RLS) Policies
 
@@ -304,9 +312,33 @@ CREATE POLICY "View own session payments"
     )
   );
 
-CREATE POLICY "Create session payments"
+CREATE POLICY "Create session payments for own sessions"
   ON public.session_payments FOR INSERT
-  WITH CHECK (auth.role() = 'service_role');
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.sessions
+      WHERE sessions.id = session_payments.session_id
+      AND sessions.student_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Update session payments"
+  ON public.session_payments FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.sessions
+      WHERE sessions.id = session_payments.session_id
+      AND (sessions.tutor_id = auth.uid() OR sessions.student_id = auth.uid())
+    )
+  );
+
+-- Add RLS policies for sessions payment fields
+CREATE POLICY "Update own sessions payment status"
+  ON public.sessions FOR UPDATE
+  USING (
+    auth.uid() = tutor_id OR 
+    auth.uid() = student_id
+  );
 
 -- Reviews policies
 CREATE POLICY "View all reviews"
