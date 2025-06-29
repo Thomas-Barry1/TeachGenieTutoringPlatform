@@ -2,10 +2,11 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import TutorSubjectManager from '@/components/TutorSubjectManager'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function SubjectsPage() {
+function SubjectsContent() {
   const { user, loading } = useAuth()
   const [profile, setProfile] = useState<any>(null)
   const [subjects, setSubjects] = useState<any[]>([])
@@ -80,5 +81,13 @@ export default function SubjectsPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function SubjectsPage() {
+  return (
+    <ProtectedRoute>
+      <SubjectsContent />
+    </ProtectedRoute>
   )
 } 

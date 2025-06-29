@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import SessionCard from '@/components/sessions/SessionCard'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import type { Database } from '@/types/database'
 
 type Session = Database['public']['Tables']['sessions']['Row'] & {
@@ -16,7 +17,7 @@ type Session = Database['public']['Tables']['sessions']['Row'] & {
   subject: Database['public']['Tables']['subjects']['Row']
 }
 
-export default function SessionsPage() {
+function SessionsContent() {
   const { user } = useAuth()
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
@@ -231,5 +232,13 @@ export default function SessionsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function SessionsPage() {
+  return (
+    <ProtectedRoute>
+      <SessionsContent />
+    </ProtectedRoute>
   )
 } 

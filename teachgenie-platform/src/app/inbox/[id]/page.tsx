@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 interface ChatMessage {
   id: string;
@@ -68,7 +69,7 @@ interface TutorProfile {
   hourly_rate: number;
 }
 
-export default function ConversationPage() {
+function ConversationContent() {
   const { id } = useParams();
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -661,5 +662,13 @@ export default function ConversationPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ConversationPage() {
+  return (
+    <ProtectedRoute>
+      <ConversationContent />
+    </ProtectedRoute>
   );
 } 

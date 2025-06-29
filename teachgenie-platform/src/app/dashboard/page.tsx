@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import TutorSubjectManager from '@/components/TutorSubjectManager'
 import SessionsPage from '@/app/sessions/page'
 import ImageUpload from '@/components/Profile/ImageUpload'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 
 type Profile = {
   id: string
@@ -24,23 +24,14 @@ type TutorProfile = {
   is_verified: boolean
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user } = useAuth()
-  const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [tutorProfile, setTutorProfile] = useState<TutorProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [editedBio, setEditedBio] = useState('')
   const [editedRate, setEditedRate] = useState('')
-
-  // Handle navigation when user is not authenticated
-  useEffect(() => {
-    if (!loading && !user) {
-      console.log('Dashboard: No user found, redirecting to login')
-      router.push('/auth/login')
-    }
-  }, [user, loading, router])
 
   useEffect(() => {
     async function loadProfile() {
@@ -361,5 +352,13 @@ export default function DashboardPage() {
         <SessionsPage />
       </div>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
   )
 } 

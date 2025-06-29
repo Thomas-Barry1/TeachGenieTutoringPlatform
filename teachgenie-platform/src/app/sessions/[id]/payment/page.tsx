@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 import PaymentWrapper from '@/components/PaymentWrapper'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 
 interface Session {
   id: string
@@ -27,7 +28,7 @@ interface Session {
   }
 }
 
-export default function SessionPaymentPage() {
+function SessionPaymentContent() {
   const { id } = useParams()
   const router = useRouter()
   const { user } = useAuth()
@@ -152,5 +153,13 @@ export default function SessionPaymentPage() {
         onError={handlePaymentError}
       />
     </div>
+  )
+}
+
+export default function SessionPaymentPage() {
+  return (
+    <ProtectedRoute>
+      <SessionPaymentContent />
+    </ProtectedRoute>
   )
 } 

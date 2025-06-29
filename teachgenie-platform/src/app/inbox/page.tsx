@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { Database } from '@/types/supabase';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 interface ChatParticipant {
   user_id: string;
@@ -59,8 +60,8 @@ type Profile = {
   last_name: string;
 };
 
-function InboxPage() {
-  const { user, loading: authLoading } = useAuth();
+function InboxContent() {
+  const { user } = useAuth();
   const router = useRouter();
   const [messages, setMessages] = useState<TransformedChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,14 +76,6 @@ function InboxPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
-
-  // Client-side authentication check
-  useEffect(() => {
-    if (!authLoading && !user) {
-      console.log('User not authenticated, redirecting to login');
-      router.replace('/auth/login');
-    }
-  }, [user, authLoading, router]);
 
   // Set current user ID from auth context
   useEffect(() => {
@@ -330,23 +323,6 @@ function InboxPage() {
     }
   };
 
-  // Show loading while checking authentication
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render anything if user is not authenticated (will redirect)
-  if (!user) {
-    return null;
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -484,10 +460,12 @@ function InboxPage() {
   );
 }
 
-export default function InboxPageWithSuspense() {
+export default function InboxPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <InboxPage />
+      <ProtectedRoute>
+        <InboxContent />
+      </ProtectedRoute>
     </Suspense>
   );
 } 

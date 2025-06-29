@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import type { Database } from '@/types/database'
 
 type Session = Database['public']['Tables']['sessions']['Row'] & {
@@ -12,7 +13,7 @@ type Session = Database['public']['Tables']['sessions']['Row'] & {
   subject: Database['public']['Tables']['subjects']['Row']
 }
 
-function ReviewPage() {
+function ReviewContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const sessionId = searchParams.get('sessionId')
@@ -212,8 +213,10 @@ function ReviewPage() {
 
 export default function ReviewPageWithSuspense() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ReviewPage />
-    </Suspense>
+    <ProtectedRoute>
+      <Suspense fallback={<div>Loading...</div>}>
+        <ReviewContent />
+      </Suspense>
+    </ProtectedRoute>
   )
 } 

@@ -215,23 +215,23 @@ export default function TutorSubjectManager({ tutorId }: { tutorId: string }) {
           <div className="mt-2 space-y-2 max-h-72 overflow-y-auto">
             {filteredAvailableSubjects.length > 0 ? (
               filteredAvailableSubjects.map(subject => (
-                <div
-                  key={subject.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <span className="font-medium">{subject.name}</span>
-                    <span className="ml-2 text-sm text-gray-500">
-                      ({subject.category})
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => addSubject(subject.id)}
-                    className="text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    Add
-                  </button>
+              <div
+                key={subject.id}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+              >
+                <div>
+                  <span className="font-medium">{subject.name}</span>
+                  <span className="ml-2 text-sm text-gray-500">
+                    ({subject.category})
+                  </span>
                 </div>
+                <button
+                  onClick={() => addSubject(subject.id)}
+                  className="text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Add
+                </button>
+              </div>
               ))
             ) : (
               <div className="text-sm text-gray-500">No subjects found</div>
