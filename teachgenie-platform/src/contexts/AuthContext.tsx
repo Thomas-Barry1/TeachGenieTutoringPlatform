@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log('AuthProvider: Sign in successful, redirecting to dashboard')
     // Use replace to avoid navigation conflicts and add a small delay
     setTimeout(() => {
-      router.replace('/dashboard')
+      window.location.replace('/dashboard')
     }, 100)
   }
 
