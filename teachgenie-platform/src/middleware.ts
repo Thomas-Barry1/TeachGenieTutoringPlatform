@@ -70,9 +70,11 @@ export async function middleware(request: NextRequest) {
       console.log('No session found, redirecting to login')
       return NextResponse.redirect(new URL('/auth/login', request.url))
     }
+    console.log('Session exists, allowing access to:', request.nextUrl.pathname)
     return response
   }
 
+  console.log('Route not protected, allowing access to:', request.nextUrl.pathname)
   return response
 }
 
@@ -81,12 +83,15 @@ export const config = {
     '/auth/:path*',
     '/dashboard',
     '/dashboard/:path*',
+    '/profile',
     '/profile/:path*',
+    '/sessions',
     '/sessions/:path*',
     '/subjects',
     '/subjects/:path*',
     '/tutor-dashboard/:path*',
     '/tutor-profile/:path*',
+    '/inbox',
     '/inbox/:path*',
   ],
 } 
