@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('No user data returned')
     }
     console.log('AuthProvider: Sign in successful, redirecting to dashboard')
-    // Use replace to avoid navigation conflicts and add a small delay
+    // Use window.location.replace to force a full page reload and add a small delay
     setTimeout(() => {
       window.location.replace('/dashboard')
     }, 100)
@@ -133,7 +133,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw error
     }
     console.log('AuthProvider: Sign out successful, redirecting to home')
-    router.replace('/')
+    // Use window.location.replace to force a full page reload and add a small delay
+    setTimeout(() => {
+      window.location.replace('/')
+    }, 100)
+
   }
 
   console.log('AuthProvider: Current state - user:', user ? 'exists' : 'none', 'loading:', loading)
