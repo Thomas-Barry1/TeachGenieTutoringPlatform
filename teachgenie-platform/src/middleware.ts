@@ -93,12 +93,15 @@ export const config = {
     '/auth/:path*',
     '/dashboard',
     '/dashboard/:path*',
+    '/profile',
     '/profile/:path*',
+    '/sessions',
     '/sessions/:path*',
     '/subjects',
     '/subjects/:path*',
     '/tutor-dashboard/:path*',
     '/tutor-profile/:path*',
-    // '/inbox/:path*', // Temporarily removed to test client-side navigation
+    '/inbox',
+    '/inbox/:path*', // Temporarily removed to test client-side navigation
   ],
 } 
