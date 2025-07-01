@@ -59,6 +59,10 @@ export default function DashboardPage() {
 
       if (profileError) {
         console.error('Error loading profile:', profileError)
+        if (profileError.code === 'PGRST116') {
+          console.log('Profile not found, redirecting to callback')
+          router.push('/auth/callback')
+        }
         return
       }
 
