@@ -21,12 +21,18 @@ function AuthCallbackPage() {
         if (sessionError) {
           console.error('Session error:', sessionError)
           setError('Failed to verify email. Please try again.')
+          setTimeout(() => {
+            window.location.replace('/auth/login')
+          }, 1000)
           setLoading(false)
           return
         }
 
         if (!session?.user) {
           setError('No user session found. Please try signing up again.')
+          setTimeout(() => {
+            window.location.replace('/auth/login')
+          }, 1000)
           setLoading(false)
           return
         }
