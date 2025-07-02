@@ -41,7 +41,7 @@ export default function TutorsPage() {
         }
       })
 
-    // Fetch tutors with their profiles and subjects
+    // Fetch verified tutors with their profiles and subjects
     supabase
       .from('tutor_profiles')
       .select(`
@@ -51,6 +51,7 @@ export default function TutorsPage() {
           subject:subjects(*)
         )
       `)
+      .eq('is_verified', true)
       .then(async ({ data: tutorsData, error: tutorsError }) => {
         if (tutorsError) {
           console.error('Error fetching tutors:', tutorsError)
