@@ -324,6 +324,108 @@ function InboxPage() {
         const otherRooms = prev.filter(room => room.id !== chatRoomId);
         return [updatedRoom, ...otherRooms];
       });
+
+      // --- EMAIL NOTIFICATION LOGIC ---
+      // Send email notification to the recipient
+      if (recipientProfile?.id && recipientProfile.id !== currentUserId) {
+        // Fetch recipient email from Supabase
+        const { data: recipientEmailData } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', recipientProfile.id)
+          .single();
+        
+        if (recipientEmailData?.email) {
+          // Get sender's profile for the email
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, user_type')
+            .eq('id', currentUserId)
+            .single();
+          
+          const senderName = senderProfile ? `${senderProfile.first_name} ${senderProfile.last_name}` : 'Someone';
+          const senderType = senderProfile?.user_type === 'tutor' ? 'tutor' : 'student';
+          
+          const emailHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>New Message on TeachGenie</title>
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+                .header { background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); padding: 30px 20px; text-align: center; }
+                .header h1 { color: white; margin: 0; font-size: 24px; font-weight: 600; }
+                .content { padding: 40px 20px; }
+                .message-box { background-color: #f8fafc; border-left: 4px solid #0ea5e9; padding: 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+                .message-text { font-size: 16px; line-height: 1.6; color: #374151; }
+                .sender-info { background-color: #f0f9ff; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                .sender-name { font-weight: 600; color: #0c4a6e; font-size: 18px; }
+                .sender-type { color: #64748b; font-size: 14px; text-transform: capitalize; }
+                .cta-button { display: inline-block; background-color: #0ea5e9; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; margin: 20px 0; }
+                .footer { background-color: #f8fafc; padding: 20px; text-align: center; color: #64748b; font-size: 14px; }
+                .footer a { color: #0ea5e9; text-decoration: none; }
+                @media (max-width: 600px) { .content { padding: 20px 15px; } .header { padding: 20px 15px; } }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>📚 TeachGenie</h1>
+                </div>
+                <div class="content">
+                  <h2 style="color: #0c4a6e; margin-bottom: 20px;">You have a new message!</h2>
+                  
+                  <div class="sender-info">
+                    <div class="sender-name">${senderName}</div>
+                    <div class="sender-type">Your ${senderType}</div>
+                  </div>
+                  
+                  <div class="message-box">
+                    <div class="message-text">"${newMessage.trim()}"</div>
+                  </div>
+                  
+                  <p style="color: #64748b; margin: 20px 0;">
+                    Reply to continue your conversation and keep your learning journey moving forward.
+                  </p>
+                  
+                  <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.vercel.app'}/inbox/${chatRoomId}" class="cta-button">
+                    View Message →
+                  </a>
+                  
+                  <p style="color: #64748b; font-size: 14px; margin-top: 30px;">
+                    💡 <strong>Tip:</strong> You can also reply directly from your TeachGenie dashboard.
+                  </p>
+                </div>
+                <div class="footer">
+                  <p>© 2025 TeachGenie. All rights reserved.</p>
+                  <p>
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.vercel.app'}/PRIVACY">Privacy Policy</a> • 
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.vercel.app'}/TERMS">Terms of Service</a>
+                  </p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `;
+          
+          const notifyRes = await fetch('/api/notify-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: recipientEmailData.email,
+              subject: `New message from ${senderName} on TeachGenie`,
+              html: emailHtml
+            }),
+            credentials: 'include'
+          });
+          const notifyData = await notifyRes.json();
+          console.log('[Notify] API response:', notifyData);
+        }
+      }
+      // --- END EMAIL NOTIFICATION LOGIC ---
     } catch (error) {
       console.error('Error:', error);
       setError('An unexpected error occurred');

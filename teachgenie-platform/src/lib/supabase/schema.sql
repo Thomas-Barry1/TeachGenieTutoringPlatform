@@ -84,6 +84,7 @@ CREATE TABLE public.reviews (
 CREATE TABLE public.chat_rooms (
   id UUID DEFAULT uuid_generate_v4(),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  type TEXT NOT NULL CHECK (type IN ('direct', 'group')) DEFAULT 'direct',
   PRIMARY KEY (id)
 );
 
