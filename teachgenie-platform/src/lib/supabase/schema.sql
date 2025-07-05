@@ -472,4 +472,22 @@ ON storage.objects FOR DELETE
 USING (
   bucket_id = 'profile-images' AND
   (storage.foldername(name))[1] = auth.uid()::text
-); 
+);
+
+-- Allow service role to select and update any session
+CREATE POLICY "Service role can select any session"
+  ON public.sessions FOR SELECT
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can update any session"
+  ON public.sessions FOR UPDATE
+  USING (auth.role() = 'service_role');
+
+-- Allow service role to select and update any session payment
+CREATE POLICY "Service role can select any session payment"
+  ON public.session_payments FOR SELECT
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "Service role can update any session payment"
+  ON public.session_payments FOR UPDATE
+  USING (auth.role() = 'service_role'); 
