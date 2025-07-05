@@ -78,6 +78,8 @@ export async function POST(request: NextRequest) {
       throw new Error('Missing sessionId in payment metadata')
     }
 
+    console.log('sessionId from Stripe:', sessionId, typeof sessionId);
+
     // Validate session exists before updating
     const { data: session, error: sessionError } = await supabase
       .from('sessions')
