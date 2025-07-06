@@ -75,7 +75,8 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/subjects') ||
     request.nextUrl.pathname.startsWith('/tutor-dashboard') ||
     request.nextUrl.pathname.startsWith('/tutor-profile') ||
-    request.nextUrl.pathname.startsWith('/inbox')
+    request.nextUrl.pathname.startsWith('/inbox') ||
+    request.nextUrl.pathname.startsWith('/payments')
   ) {
     console.log('Protected route accessed:', request.nextUrl.pathname)
     if (!session) {
@@ -102,6 +103,8 @@ export const config = {
     '/tutor-dashboard/:path*',
     '/tutor-profile/:path*',
     '/inbox',
-    '/inbox/:path*', // Temporarily removed to test client-side navigation
+    '/inbox/:path*',
+    '/payments',
+    '/payments/:path*',
   ],
 } 

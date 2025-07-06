@@ -19,6 +19,7 @@ CREATE TABLE public.tutor_profiles (
   bio TEXT,
   hourly_rate DECIMAL CHECK (hourly_rate > 0),
   is_verified BOOLEAN DEFAULT false,
+  stripe_account_id TEXT,
   PRIMARY KEY (id)
 );
 

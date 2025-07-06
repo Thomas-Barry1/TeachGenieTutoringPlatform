@@ -140,6 +140,21 @@ export default function Header() {
                               )}
                             </MenuItem>
                           )}
+                          {isTutor && (
+                            <MenuItem>
+                              {({ active }) => (
+                                <Link
+                                  href="/payments"
+                                  className={classNames(
+                                    active ? 'bg-gray-100' : '',
+                                    'block px-4 py-2 text-sm text-gray-700'
+                                  )}
+                                >
+                                  Payments
+                                </Link>
+                              )}
+                            </MenuItem>
+                          )}
                           <MenuItem>
                             {({ active }) => (
                               <Link
@@ -302,6 +317,20 @@ export default function Header() {
                       )}
                     >
                       Subjects
+                    </Disclosure.Button>
+                  )}
+                  {isTutor && (
+                    <Disclosure.Button
+                      as={Link}
+                      href="/payments"
+                      className={classNames(
+                        pathname === '/payments'
+                          ? 'bg-primary-50 border-primary-500 text-primary-700'
+                          : 'border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700',
+                        'block border-l-4 py-2 pl-3 pr-4 text-base font-medium'
+                      )}
+                    >
+                      Payments
                     </Disclosure.Button>
                   )}
                   <Disclosure.Button

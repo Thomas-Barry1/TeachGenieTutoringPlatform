@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import TutorSubjectManager from '@/components/TutorSubjectManager'
 import SessionsPage from '@/app/sessions/page'
 import ImageUpload from '@/components/Profile/ImageUpload'
+import TutorPayments from '@/components/Payments'
 
 type Profile = {
   id: string
@@ -361,8 +362,11 @@ export default function DashboardPage() {
 
       {/* Add Sessions section for both user types */}
       <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">My Sessions</h2>
-        <SessionsPage />
+        {/* <h2 className="text-lg font-medium text-gray-900 mb-4">My Sessions</h2> */}
+        <div className="space-y-6">
+          <TutorPayments />
+          <SessionsPage />
+        </div>
       </div>
     </div>
   )
