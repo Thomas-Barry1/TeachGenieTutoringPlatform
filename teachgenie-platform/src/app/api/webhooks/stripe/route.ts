@@ -53,6 +53,10 @@ export async function POST(request: NextRequest) {
         await handlePaymentCanceled(event.data.object, supabase)
         break
 
+      case 'account.updated':
+        await handleAccountUpdated(event.data.object, supabase)
+        break
+
       default:
         console.log(`Unhandled event type: ${event.type}`)
     }
@@ -99,12 +103,54 @@ export async function POST(request: NextRequest) {
 
     console.log('Found session:', session)
 
+    // Get tutor's Stripe account ID
+    const { data: tutorProfile, error: tutorError } = await supabase
+      .from('tutor_profiles')
+      .select('stripe_account_id')
+      .eq('id', tutorId)
+      .single()
+
+    if (tutorError || !tutorProfile) {
+      console.error('Error fetching tutor profile:', tutorError)
+      throw new Error(`Failed to fetch tutor profile: ${tutorError?.message}`)
+    }
+
+    if (!tutorProfile.stripe_account_id) {
+      console.error(`Tutor ${tutorId} does not have a Stripe account`)
+      throw new Error('Tutor not onboarded to Stripe')
+    }
+
+    // Create transfer to tutor's Stripe account
+    let transferId = null
+    try {
+      const transfer = await stripe.transfers.create({
+        amount: Math.round(parseFloat(tutorPayout) * 100), // Convert to cents
+        currency: 'usd',
+        destination: tutorProfile.stripe_account_id,
+        transfer_group: sessionId,
+        metadata: {
+          sessionId,
+          tutorId,
+          platformFee,
+          tutorPayout,
+          studentId
+        }
+      })
+      
+      transferId = transfer.id
+      console.log(`Transfer created successfully: ${transfer.id}`)
+    } catch (transferError) {
+      console.error('Error creating transfer:', transferError)
+      // Don't throw here - we still want to update the payment status
+      // The transfer can be retried manually if needed
+    }
+
     // Update payment record
     const { error: paymentError } = await supabase
       .from('session_payments')
       .update({
         status: 'completed',
-        stripe_transfer_id: paymentIntent.id
+        stripe_transfer_id: transferId
       })
       .eq('stripe_payment_intent_id', paymentIntent.id)
 
@@ -203,5 +249,49 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Payment canceled for session ${sessionId}`)
+  }
+
+  async function handleAccountUpdated(account: any, supabase: any) {
+    console.log('Processing account update for:', account.id)
+    
+    // Check if this is a connected account that just became fully enabled
+    if (account.charges_enabled && account.payouts_enabled) {
+      console.log('Account is now fully enabled, checking for pending payments')
+      
+      // Find the tutor associated with this Stripe account
+      const { data: tutorProfile, error: tutorError } = await supabase
+        .from('tutor_profiles')
+        .select('id')
+        .eq('stripe_account_id', account.id)
+        .single()
+
+      if (tutorError || !tutorProfile) {
+        console.log('No tutor found for Stripe account:', account.id)
+        return
+      }
+
+      console.log('Found tutor for account update:', tutorProfile.id)
+
+      // Trigger retry of pending payments for this tutor
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/stripe/retry-pending-payments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Key': process.env.INTERNAL_API_KEY || 'internal'
+          },
+          body: JSON.stringify({ tutorId: tutorProfile.id })
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          console.log('Pending payments retry triggered:', result)
+        } else {
+          console.error('Failed to trigger pending payments retry:', response.status)
+        }
+      } catch (error) {
+        console.error('Error triggering pending payments retry:', error)
+      }
+    }
   }
 } 
