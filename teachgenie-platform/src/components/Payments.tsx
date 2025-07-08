@@ -244,7 +244,7 @@ export default function TutorPayments() {
                 </div>
                 <div className="text-sm mt-2 text-yellow-800">
                   You may need to complete additional verification steps in your Stripe dashboard. 
-                  Click "Complete Onboarding" to access your Stripe account.
+                  Click &quot;Complete Onboarding&quot; to access your Stripe account.
                 </div>
               </div>
               <div className="flex space-x-2">
