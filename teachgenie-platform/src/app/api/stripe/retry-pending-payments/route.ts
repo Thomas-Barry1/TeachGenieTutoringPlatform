@@ -1,29 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import stripe from '@/lib/stripe/server'
 
 export async function POST(request: NextRequest) {
   try {
-    // Security check - only allow internal calls
-    const internalKey = request.headers.get('X-Internal-Key')
-    if (internalKey !== (process.env.INTERNAL_API_KEY || 'internal')) {
+    // Get authenticated user
+    const supabase = await createClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Check if user is a tutor
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('user_type')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile || profile.user_type !== 'tutor') {
+      return NextResponse.json({ error: 'Only tutors can retry payments' }, { status: 403 })
     }
 
     const { tutorId } = await request.json()
     
-    if (!tutorId) {
-      return NextResponse.json({ error: 'Missing tutorId' }, { status: 400 })
+    // Ensure user can only retry their own payments
+    if (tutorId !== user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
-
-    // Use service role client to bypass RLS
-    const supabase = createServiceClient()
 
     // Get tutor's Stripe account ID
     const { data: tutorProfile, error: tutorError } = await supabase
       .from('tutor_profiles')
       .select('stripe_account_id')
-      .eq('id', tutorId)
+      .eq('id', user.id)
       .single()
 
     if (tutorError || !tutorProfile) {
@@ -45,7 +56,7 @@ export async function POST(request: NextRequest) {
           end_time
         )
       `)
-      .eq('sessions.tutor_id', tutorId)
+      .eq('sessions.tutor_id', user.id)
       .eq('status', 'completed')
       .is('stripe_transfer_id', null)
 
@@ -57,7 +68,7 @@ export async function POST(request: NextRequest) {
     if (!pendingPayments || pendingPayments.length === 0) {
       return NextResponse.json({ 
         message: 'No pending payments found for this tutor',
-        tutorId,
+        tutorId: user.id,
         pendingCount: 0
       })
     }
@@ -126,8 +137,8 @@ export async function POST(request: NextRequest) {
       .reduce((sum, r) => sum + (r.amount || 0), 0)
 
     return NextResponse.json({
-      message: `Processed ${results.length} pending payments for tutor ${tutorId}: ${successful} successful, ${failed} failed`,
-      tutorId,
+      message: `Processed ${results.length} pending payments for tutor ${user.id}: ${successful} successful, ${failed} failed`,
+      tutorId: user.id,
       pendingCount: pendingPayments.length,
       successfulCount: successful,
       failedCount: failed,

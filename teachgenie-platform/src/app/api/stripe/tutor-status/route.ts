@@ -31,8 +31,13 @@ export async function GET(request: NextRequest) {
     try {
       const account = await stripe.accounts.retrieve(tutorProfile.stripe_account_id);
       
+      console.log('Stripe account status for tutor:', user.id);
+      console.log('Account Information:', account);
+      
       // Check if account is fully onboarded
       const isComplete = account.charges_enabled && account.payouts_enabled;
+      
+      console.log('Account is complete:', isComplete);
       
       // If account just became complete, trigger pending payment retry
       if (isComplete) {

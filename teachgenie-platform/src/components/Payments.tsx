@@ -41,6 +41,7 @@ export default function TutorPayments() {
   const [pendingPayments, setPendingPayments] = useState<PendingPayment[]>([])
   const [pendingLoading, setPendingLoading] = useState(false)
   const [retryLoading, setRetryLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     async function loadProfile() {
@@ -70,12 +71,19 @@ export default function TutorPayments() {
     loadProfile()
   }, [user])
 
+  const checkStripeStatus = async () => {
+    try {
+      const res = await fetch('/api/stripe/tutor-status')
+      const data = await res.json()
+      setStripeStatus(data)
+    } catch (error) {
+      setStripeStatus({ connected: false, error: 'Failed to check status' })
+    }
+  }
+
   useEffect(() => {
     if (profile && profile.user_type === 'tutor') {
-      fetch('/api/stripe/tutor-status')
-        .then(res => res.json())
-        .then(data => setStripeStatus(data))
-        .catch(() => setStripeStatus({ connected: false, error: 'Failed to check status' }))
+      checkStripeStatus()
     }
   }, [profile])
 
@@ -89,6 +97,8 @@ export default function TutorPayments() {
     setPendingLoading(true)
     try {
       const supabase = createClient()
+      console.log('Loading pending payments for user:', user?.id)
+      
       const { data, error } = await supabase
         .from('session_payments')
         .select(`
@@ -108,6 +118,7 @@ export default function TutorPayments() {
       if (error) {
         console.error('Error loading pending payments:', error)
       } else {
+        console.log('Found pending payments:', data)
         setPendingPayments(data || [])
       }
     } catch (error) {
@@ -231,14 +242,31 @@ export default function TutorPayments() {
                   {!stripeStatus.chargesEnabled && <div>• Payment processing not enabled</div>}
                   {!stripeStatus.payoutsEnabled && <div>• Payouts not enabled</div>}
                 </div>
+                <div className="text-sm mt-2 text-yellow-800">
+                  You may need to complete additional verification steps in your Stripe dashboard. 
+                  Click "Complete Onboarding" to access your Stripe account.
+                </div>
               </div>
-              <button
-                onClick={handleStripeOnboard}
-                className="px-4 py-2 text-white bg-yellow-600 rounded hover:bg-yellow-700 disabled:opacity-50"
-                disabled={stripeLoading}
-              >
-                {stripeLoading ? 'Loading...' : 'Complete Onboarding'}
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleStripeOnboard}
+                  className="px-4 py-2 text-white bg-yellow-600 rounded hover:bg-yellow-700 disabled:opacity-50"
+                  disabled={stripeLoading}
+                >
+                  {stripeLoading ? 'Loading...' : 'Complete Onboarding'}
+                </button>
+                <button
+                  onClick={async () => {
+                    setRefreshing(true)
+                    await checkStripeStatus()
+                    setRefreshing(false)
+                  }}
+                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                  disabled={refreshing}
+                >
+                  {refreshing ? 'Refreshing...' : 'Refresh Status'}
+                </button>
+              </div>
             </div>
           ) : (
             <>
