@@ -41,6 +41,7 @@ export default function TutorPayments() {
   const [completedPayments, setCompletedPayments] = useState<CompletedPayment[]>([])
   const [paymentsLoading, setPaymentsLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [dashboardLoading, setDashboardLoading] = useState(false)
 
   useEffect(() => {
     async function loadProfile() {
@@ -144,6 +145,32 @@ export default function TutorPayments() {
     }
   }
 
+  const handleOpenDashboard = async () => {
+    setDashboardLoading(true)
+    try {
+      const response = await fetch('/api/stripe/create-login-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create login link')
+      }
+
+      const { url } = await response.json()
+      
+      // Open the Stripe Express dashboard in a new tab
+      window.open(url, '_blank')
+    } catch (error) {
+      console.error('Error opening dashboard:', error)
+      alert('Failed to open Stripe dashboard. Please try again.')
+    } finally {
+      setDashboardLoading(false)
+    }
+  }
+
 
 
   if (loading) {
@@ -173,6 +200,25 @@ export default function TutorPayments() {
             <div className="space-y-4">
               <div className="text-green-700 bg-green-50 border border-green-200 rounded px-4 py-2">
                 <span className="font-semibold">Stripe account connected!</span> You are ready to receive payouts.
+              </div>
+              
+              {/* Stripe Dashboard Link */}
+              <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-semibold text-blue-800">Stripe Express Dashboard</h3>
+                    <p className="text-sm text-blue-700 mt-1">
+                      View your payments, manage your account, and check your payout schedule.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleOpenDashboard}
+                    disabled={dashboardLoading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+                  >
+                    {dashboardLoading ? 'Opening...' : 'Open Dashboard'}
+                  </button>
+                </div>
               </div>
               
               {/* Payment History Section */}
@@ -211,6 +257,26 @@ export default function TutorPayments() {
                   Click &quot;Complete Onboarding&quot; to access your Stripe account.
                 </div>
               </div>
+              
+              {/* Stripe Dashboard Link for Incomplete Accounts */}
+              <div className="bg-yellow-50 border border-yellow-200 rounded px-4 py-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-semibold text-yellow-800">Stripe Express Dashboard</h3>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Complete your account setup and manage your payment settings.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleOpenDashboard}
+                    disabled={dashboardLoading}
+                    className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm font-medium disabled:opacity-50"
+                  >
+                    {dashboardLoading ? 'Opening...' : 'Open Dashboard'}
+                  </button>
+                </div>
+              </div>
+              
               <div className="flex space-x-2">
                 <button
                   onClick={handleStripeOnboard}
