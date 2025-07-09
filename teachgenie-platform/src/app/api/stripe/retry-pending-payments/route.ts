@@ -121,6 +121,20 @@ export async function POST(request: NextRequest) {
 
       } catch (error) {
         console.error(`Error processing payment ${payment.id}:`, error)
+        
+        // Update payment record to mark transfer as failed
+        const { error: updateError } = await supabase
+          .from('session_payments')
+          .update({
+            status: 'failed',
+            stripe_transfer_id: null
+          })
+          .eq('id', payment.id)
+
+        if (updateError) {
+          console.error('Error updating failed payment record:', updateError)
+        }
+        
         results.push({
           paymentId: payment.id,
           sessionId: payment.session_id,
@@ -136,6 +150,12 @@ export async function POST(request: NextRequest) {
       .filter(r => r.success)
       .reduce((sum, r) => sum + (r.amount || 0), 0)
 
+    // Get error details for failed transfers
+    const failedErrors = results
+      .filter(r => !r.success)
+      .map(r => r.error)
+      .filter((error, index, arr) => arr.indexOf(error) === index) // unique errors
+
     return NextResponse.json({
       message: `Processed ${results.length} pending payments for tutor ${user.id}: ${successful} successful, ${failed} failed`,
       tutorId: user.id,
@@ -143,6 +163,7 @@ export async function POST(request: NextRequest) {
       successfulCount: successful,
       failedCount: failed,
       totalAmountTransferred: totalAmount,
+      failedErrors: failedErrors,
       results
     })
 

@@ -23,7 +23,7 @@ type StripeStatus = {
   error?: string
 }
 
-type PendingPayment = {
+type CompletedPayment = {
   id: string
   session_id: string
   amount: number
@@ -38,9 +38,8 @@ export default function TutorPayments() {
   const [stripeLoading, setStripeLoading] = useState(false)
   const [stripeError, setStripeError] = useState<string | null>(null)
   const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null)
-  const [pendingPayments, setPendingPayments] = useState<PendingPayment[]>([])
-  const [pendingLoading, setPendingLoading] = useState(false)
-  const [retryLoading, setRetryLoading] = useState(false)
+  const [completedPayments, setCompletedPayments] = useState<CompletedPayment[]>([])
+  const [paymentsLoading, setPaymentsLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
@@ -89,15 +88,15 @@ export default function TutorPayments() {
 
   useEffect(() => {
     if (stripeStatus?.connected && user) {
-      loadPendingPayments()
+      loadCompletedPayments()
     }
   }, [stripeStatus, user])
 
-  const loadPendingPayments = async () => {
-    setPendingLoading(true)
+  const loadCompletedPayments = async () => {
+    setPaymentsLoading(true)
     try {
       const supabase = createClient()
-      console.log('Loading pending payments for user:', user?.id)
+      console.log('Loading completed payments for user:', user?.id)
       
       const { data, error } = await supabase
         .from('session_payments')
@@ -113,18 +112,17 @@ export default function TutorPayments() {
         `)
         .eq('sessions.tutor_id', user?.id)
         .eq('status', 'completed')
-        .is('stripe_transfer_id', null)
 
       if (error) {
-        console.error('Error loading pending payments:', error)
+        console.error('Error loading completed payments:', error)
       } else {
-        console.log('Found pending payments:', data)
-        setPendingPayments(data || [])
+        console.log('Found completed payments:', data)
+        setCompletedPayments(data || [])
       }
     } catch (error) {
-      console.error('Error loading pending payments:', error)
+      console.error('Error loading completed payments:', error)
     } finally {
-      setPendingLoading(false)
+      setPaymentsLoading(false)
     }
   }
 
@@ -146,34 +144,7 @@ export default function TutorPayments() {
     }
   }
 
-  const handleRetryPendingPayments = async () => {
-    if (!user) return
-    
-    setRetryLoading(true)
-    try {
-      const res = await fetch('/api/stripe/retry-pending-payments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ tutorId: user.id })
-      })
 
-      const data = await res.json()
-      
-      if (res.ok) {
-        // Reload pending payments after successful retry
-        await loadPendingPayments()
-        alert(`Successfully processed ${data.successfulCount} payments. Total amount: $${data.totalAmountTransferred}`)
-      } else {
-        alert('Failed to retry payments: ' + (data.error || 'Unknown error'))
-      }
-    } catch (error) {
-      alert('Failed to retry payments: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    } finally {
-      setRetryLoading(false)
-    }
-  }
 
   if (loading) {
     return (
@@ -187,7 +158,7 @@ export default function TutorPayments() {
     return null
   }
 
-  const totalPendingAmount = pendingPayments.reduce((sum, payment) => sum + payment.tutor_payout, 0)
+  const totalCompletedAmount = completedPayments.reduce((sum: number, payment: CompletedPayment) => sum + payment.tutor_payout, 0)
 
   return (
     <div className="space-y-6">
@@ -204,33 +175,26 @@ export default function TutorPayments() {
                 <span className="font-semibold">Stripe account connected!</span> You are ready to receive payouts.
               </div>
               
-              {/* Pending Payments Section */}
-              {pendingLoading ? (
-                <div className="text-sm text-gray-600">Loading pending payments...</div>
-              ) : pendingPayments.length > 0 ? (
+              {/* Payment History Section */}
+              {paymentsLoading ? (
+                <div className="text-sm text-gray-600">Loading payment history...</div>
+              ) : completedPayments.length > 0 ? (
                 <div className="bg-blue-50 border border-blue-200 rounded px-4 py-3">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-semibold text-blue-800">
-                      {pendingPayments.length} pending payment{pendingPayments.length !== 1 ? 's' : ''}
+                      {completedPayments.length} completed payment{completedPayments.length !== 1 ? 's' : ''} ready for payout
                     </span>
                     <span className="text-blue-700 font-medium">
-                      ${totalPendingAmount.toFixed(2)}
+                      ${totalCompletedAmount.toFixed(2)}
                     </span>
                   </div>
                   <p className="text-sm text-blue-700 mb-3">
-                    These payments are ready to be transferred to your Stripe account.
+                    These payments have been automatically transferred to your Stripe account and will be paid out according to your payout schedule.
                   </p>
-                  <button
-                    onClick={handleRetryPendingPayments}
-                    disabled={retryLoading}
-                    className="px-4 py-2 text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
-                  >
-                    {retryLoading ? 'Processing...' : 'Transfer Pending Payments'}
-                  </button>
                 </div>
               ) : (
                 <div className="text-sm text-gray-600">
-                  No pending payments found.
+                  No completed payments found.
                 </div>
               )}
             </div>

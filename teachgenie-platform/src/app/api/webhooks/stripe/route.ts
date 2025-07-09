@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
   async function handlePaymentSuccess(paymentIntent: any, supabase: any) {
     console.log('Processing payment success for:', paymentIntent.id)
     console.log('Payment metadata:', paymentIntent.metadata)
+    console.log('Payment intent transfer data:', paymentIntent.transfer_data)
     
     const { sessionId, tutorId, platformFee, tutorPayout, studentId } = paymentIntent.metadata
 
@@ -103,47 +104,9 @@ export async function POST(request: NextRequest) {
 
     console.log('Found session:', session)
 
-    // Get tutor's Stripe account ID
-    const { data: tutorProfile, error: tutorError } = await supabase
-      .from('tutor_profiles')
-      .select('stripe_account_id')
-      .eq('id', tutorId)
-      .single()
-
-    if (tutorError || !tutorProfile) {
-      console.error('Error fetching tutor profile:', tutorError)
-      throw new Error(`Failed to fetch tutor profile: ${tutorError?.message}`)
-    }
-
-    if (!tutorProfile.stripe_account_id) {
-      console.error(`Tutor ${tutorId} does not have a Stripe account`)
-      throw new Error('Tutor not onboarded to Stripe')
-    }
-
-    // Create transfer to tutor's Stripe account
-    let transferId = null
-    try {
-      const transfer = await stripe.transfers.create({
-        amount: Math.round(parseFloat(tutorPayout) * 100), // Convert to cents
-        currency: 'usd',
-        destination: tutorProfile.stripe_account_id,
-        transfer_group: sessionId,
-        metadata: {
-          sessionId,
-          tutorId,
-          platformFee,
-          tutorPayout,
-          studentId
-        }
-      })
-      
-      transferId = transfer.id
-      console.log(`Transfer created successfully: ${transfer.id}`)
-    } catch (transferError) {
-      console.error('Error creating transfer:', transferError)
-      // Don't throw here - we still want to update the payment status
-      // The transfer can be retried manually if needed
-    }
+    // With destination charges, the transfer happens automatically
+    // We just need to update the payment record with the transfer ID from the payment intent
+    const transferId = paymentIntent.transfer_data?.destination_payment || null
 
     // Update payment record
     const { error: paymentError } = await supabase
@@ -173,6 +136,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`Payment successful for session ${sessionId}. Tutor payout: $${tutorPayout}`)
+    console.log(`Transfer ID: ${transferId}`)
   }
 
   async function handlePaymentFailure(paymentIntent: any, supabase: any) {
