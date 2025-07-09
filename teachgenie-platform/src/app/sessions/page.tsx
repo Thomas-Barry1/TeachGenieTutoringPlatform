@@ -105,7 +105,18 @@ export default function SessionsPage() {
         }
         
         console.log('Raw session data:', data)
-        setSessions(data || [])
+        
+        // Transform the data to match the expected Session type structure
+        const transformedSessions = (data || []).map((session: any) => ({
+          ...session,
+          // For student, create a nested profile structure to match tutor
+          student: {
+            profile: session.student
+          }
+        }))
+        
+        console.log('Transformed session data:', transformedSessions)
+        setSessions(transformedSessions)
       } catch (err) {
         console.error('Session fetch error:', err)
         setError(err instanceof Error ? err.message : 'Failed to load sessions')

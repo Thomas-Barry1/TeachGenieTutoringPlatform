@@ -24,6 +24,8 @@ export default function SessionCard({ session, userType, onStatusChange, onDelet
   const startTime = new Date(session.start_time)
   const endTime = new Date(session.end_time)
   const otherParty = userType === 'student' ? session.tutor?.profile : session.student?.profile
+  console.log("SessionCard", session)
+  console.log("otherParty", otherParty)
 
   const getStatusColor = (status: Session['status']) => {
     switch (status) {
