@@ -42,13 +42,13 @@ export default function SessionFilters({
   const [isExpanded, setIsExpanded] = useState(false)
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-8">
       {/* Time-based filter buttons */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex space-x-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
+        <div className="flex flex-wrap gap-2 sm:gap-4">
           <button
             onClick={() => setFilter('upcoming')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
+            className={`px-3 py-2 rounded-lg transition-colors text-sm sm:text-base ${
               filter === 'upcoming'
                 ? 'bg-primary-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -58,7 +58,7 @@ export default function SessionFilters({
           </button>
           <button
             onClick={() => setFilter('past')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
+            className={`px-3 py-2 rounded-lg transition-colors text-sm sm:text-base ${
               filter === 'past'
                 ? 'bg-primary-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -68,7 +68,7 @@ export default function SessionFilters({
           </button>
           <button
             onClick={() => setFilter('all')}
-            className={`px-4 py-2 rounded-lg transition-colors ${
+            className={`px-3 py-2 rounded-lg transition-colors text-sm sm:text-base ${
               filter === 'all'
                 ? 'bg-primary-600 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -80,7 +80,7 @@ export default function SessionFilters({
         
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-sm text-gray-600 hover:text-gray-800 flex items-center space-x-1"
+          className="text-sm text-gray-600 hover:text-gray-800 flex items-center justify-center sm:justify-start space-x-1 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <span>{isExpanded ? 'Hide' : 'Show'} advanced filters</span>
           <svg
@@ -96,23 +96,24 @@ export default function SessionFilters({
 
       {/* Advanced filters */}
       {isExpanded && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search */}
-            <div className="lg:col-span-2">
-              <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
-                Search
-              </label>
-              <input
-                type="text"
-                id="search"
-                placeholder="Search by name or subject..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              />
-            </div>
+        <div className="space-y-4 border-t border-gray-200 pt-4">
+          {/* Search - Full width on mobile, 2 columns on larger screens */}
+          <div className="w-full">
+            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-1">
+              Search
+            </label>
+            <input
+              type="text"
+              id="search"
+              placeholder="Search by name or subject..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            />
+          </div>
 
+          {/* Filters grid - Stack on mobile, 2-3 columns on larger screens */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Status Filter */}
             <div>
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
@@ -148,11 +149,9 @@ export default function SessionFilters({
                 <option value="failed">Failed</option>
               </select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Subject Filter */}
-            <div>
+            <div className="sm:col-span-2 lg:col-span-1">
               <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
                 Subject
               </label>
@@ -175,14 +174,14 @@ export default function SessionFilters({
       )}
 
       {/* Filter summary and clear button */}
-      <div className="mt-4 flex justify-between items-center pt-4 border-t border-gray-200">
+      <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center pt-4 border-t border-gray-200 space-y-2 sm:space-y-0">
         <button
           onClick={onClearFilters}
-          className="text-sm text-gray-600 hover:text-gray-800 underline"
+          className="text-sm text-gray-600 hover:text-gray-800 underline text-center sm:text-left"
         >
           Clear all filters
         </button>
-        <div className="text-sm text-gray-600">
+        <div className="text-sm text-gray-600 text-center sm:text-right">
           Showing {filteredCount} of {totalCount} sessions
         </div>
       </div>
