@@ -152,7 +152,7 @@ export default function SessionCard({ session, userType, onStatusChange, onDelet
           </div>
         )}
 
-        {session.status === 'scheduled' && userType === 'tutor' && onStatusChange && (
+        {session.status === 'scheduled' && onStatusChange && (
           <div className="mt-6 flex space-x-4">
             <button
               onClick={() => onStatusChange(session.id, 'completed')}

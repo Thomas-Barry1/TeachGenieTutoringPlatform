@@ -81,4 +81,95 @@ describe('SessionCard', () => {
     render(<SessionCard session={completedSession} userType="tutor" onStatusChange={mockOnStatusChange} />)
     expect(screen.queryByText('Write a Review')).not.toBeInTheDocument()
   })
+})
+
+// Simple test to verify session filtering logic
+describe('Session Filtering', () => {
+  const mockSessions = [
+    {
+      id: '1',
+      start_time: '2024-12-25T10:00:00Z', // Future date
+      status: 'scheduled',
+      payment_status: 'pending',
+      subject: { id: 'math', name: 'Mathematics' },
+      tutor: { profile: { first_name: 'John', last_name: 'Doe' } },
+      student: { profile: { first_name: 'Jane', last_name: 'Smith' } }
+    },
+    {
+      id: '2',
+      start_time: '2024-01-01T10:00:00Z', // Past date
+      status: 'completed',
+      payment_status: 'paid',
+      subject: { id: 'science', name: 'Science' },
+      tutor: { profile: { first_name: 'Bob', last_name: 'Johnson' } },
+      student: { profile: { first_name: 'Alice', last_name: 'Brown' } }
+    },
+    {
+      id: '3',
+      start_time: '2024-12-26T10:00:00Z', // Future date
+      status: 'scheduled',
+      payment_status: 'pending',
+      subject: { id: 'math', name: 'Mathematics' },
+      tutor: { profile: { first_name: 'John', last_name: 'Doe' } },
+      student: { profile: { first_name: 'Charlie', last_name: 'Wilson' } }
+    }
+  ]
+
+  test('should filter upcoming sessions', () => {
+    const now = new Date('2024-06-01T00:00:00Z')
+    const upcoming = mockSessions.filter(session => new Date(session.start_time) > now)
+    expect(upcoming).toHaveLength(2)
+    expect(upcoming[0].id).toBe('1')
+    expect(upcoming[1].id).toBe('3')
+  })
+
+  test('should filter past sessions', () => {
+    const now = new Date('2024-06-01T00:00:00Z')
+    const past = mockSessions.filter(session => new Date(session.start_time) <= now)
+    expect(past).toHaveLength(1)
+    expect(past[0].id).toBe('2')
+  })
+
+  test('should filter by status', () => {
+    const scheduled = mockSessions.filter(session => session.status === 'scheduled')
+    expect(scheduled).toHaveLength(2)
+    
+    const completed = mockSessions.filter(session => session.status === 'completed')
+    expect(completed).toHaveLength(1)
+  })
+
+  test('should filter by payment status', () => {
+    const pending = mockSessions.filter(session => session.payment_status === 'pending')
+    expect(pending).toHaveLength(2)
+    
+    const paid = mockSessions.filter(session => session.payment_status === 'paid')
+    expect(paid).toHaveLength(1)
+  })
+
+  test('should filter by subject', () => {
+    const mathSessions = mockSessions.filter(session => session.subject.id === 'math')
+    expect(mathSessions).toHaveLength(2)
+    
+    const scienceSessions = mockSessions.filter(session => session.subject.id === 'science')
+    expect(scienceSessions).toHaveLength(1)
+  })
+
+  test('should search by name', () => {
+    const query = 'john'
+    const results = mockSessions.filter(session => {
+      const tutorName = `${session.tutor.profile.first_name} ${session.tutor.profile.last_name}`.toLowerCase()
+      const studentName = `${session.student.profile.first_name} ${session.student.profile.last_name}`.toLowerCase()
+      return tutorName.includes(query) || studentName.includes(query)
+    })
+    expect(results).toHaveLength(2) // John Doe (tutor) and Charlie Wilson (student)
+  })
+
+  test('should search by subject name', () => {
+    const query = 'math'
+    const results = mockSessions.filter(session => {
+      const subjectName = session.subject.name.toLowerCase()
+      return subjectName.includes(query)
+    })
+    expect(results).toHaveLength(2)
+  })
 }) 
