@@ -41,7 +41,6 @@ export default function TutorPayments() {
   const [completedPayments, setCompletedPayments] = useState<CompletedPayment[]>([])
   const [paymentsLoading, setPaymentsLoading] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
-  const [dashboardLoading, setDashboardLoading] = useState(false)
 
   useEffect(() => {
     async function loadProfile() {
@@ -145,30 +144,9 @@ export default function TutorPayments() {
     }
   }
 
-  const handleOpenDashboard = async () => {
-    setDashboardLoading(true)
-    try {
-      const response = await fetch('/api/stripe/create-login-link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to create login link')
-      }
-
-      const { url } = await response.json()
-      
-      // Open the Stripe Express dashboard in a new tab
-      window.open(url, '_blank')
-    } catch (error) {
-      console.error('Error opening dashboard:', error)
-      alert('Failed to open Stripe dashboard. Please try again.')
-    } finally {
-      setDashboardLoading(false)
-    }
+  const handleOpenDashboard = () => {
+    // Open a new tab pointing to our Stripe dashboard page
+    window.open('/stripe-dashboard', '_blank')
   }
 
 
@@ -213,10 +191,9 @@ export default function TutorPayments() {
                   </div>
                   <button
                     onClick={handleOpenDashboard}
-                    disabled={dashboardLoading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
                   >
-                    {dashboardLoading ? 'Opening...' : 'Open Dashboard'}
+                    Open Dashboard
                   </button>
                 </div>
               </div>
@@ -269,10 +246,9 @@ export default function TutorPayments() {
                   </div>
                   <button
                     onClick={handleOpenDashboard}
-                    disabled={dashboardLoading}
-                    className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm font-medium disabled:opacity-50"
+                    className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 transition-colors text-sm font-medium"
                   >
-                    {dashboardLoading ? 'Opening...' : 'Open Dashboard'}
+                    Open Dashboard
                   </button>
                 </div>
               </div>

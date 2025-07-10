@@ -76,7 +76,8 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/tutor-dashboard') ||
     request.nextUrl.pathname.startsWith('/tutor-profile') ||
     request.nextUrl.pathname.startsWith('/inbox') ||
-    request.nextUrl.pathname.startsWith('/payments')
+    request.nextUrl.pathname.startsWith('/payments') ||
+    request.nextUrl.pathname.startsWith('/stripe-dashboard')
   ) {
     console.log('Protected route accessed:', request.nextUrl.pathname)
     if (!session) {
@@ -106,5 +107,6 @@ export const config = {
     '/inbox/:path*',
     '/payments',
     '/payments/:path*',
+    '/stripe-dashboard',
   ],
 } 
