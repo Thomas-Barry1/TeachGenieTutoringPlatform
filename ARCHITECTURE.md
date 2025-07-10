@@ -4,6 +4,7 @@
 - **Frontend**: Next.js 14 (App Router)
 - **Backend**: Supabase (PostgreSQL, Auth, Realtime)
 - **Email**: Resend
+- **Payment Processing**: Stripe Connect (destination charges)
 - **Deployment**: Vercel
 - **Styling**: Tailwind CSS
 
@@ -15,6 +16,8 @@ Required environment variables in `.env.local`:
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 RESEND_API_KEY=your_resend_api_key
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 ```
 
 ### Configuration Files
@@ -46,6 +49,8 @@ RESEND_API_KEY=your_resend_api_key
 - `src/lib/supabase/schema.sql` - Database schema and RLS policies
 - `src/lib/supabase/client.ts` - Supabase client configuration
 - `src/lib/supabase/server.ts` - Supabase server client with cookie management
+- `src/lib/stripe/server.ts` - Stripe server-side configuration
+- `src/lib/stripe/client.ts` - Stripe client-side configuration
 - `src/contexts/AuthContext.tsx` - Authentication state management
 - `src/types/database.ts` - Database type definitions
 - `src/types/supabase.ts` - Supabase client type definitions
@@ -53,6 +58,12 @@ RESEND_API_KEY=your_resend_api_key
 - `src/app/layout.tsx` - Root layout with providers
 - `src/app/page.tsx` - Landing page
 - `src/app/api/notify-message/route.ts` - Email notification API endpoint
+
+### New Session Management Components
+- `src/components/sessions/SessionFilters.tsx` - Advanced filtering and search functionality
+- `src/components/sessions/SessionPagination.tsx` - Smart pagination with responsive design
+- `src/components/sessions/SessionCard.tsx` - Individual session display with actions
+- `src/components/sessions/SessionCard.test.tsx` - Unit tests for session filtering logic
 
 ## Database Schema
 
@@ -67,6 +78,7 @@ RESEND_API_KEY=your_resend_api_key
    - Additional information for tutors
    - Links to profiles table
    - Stores bio, hourly rate, verification status
+   - Includes Stripe Connect account information
 
 3. `subjects`
    - Available tutoring subjects
@@ -81,11 +93,13 @@ RESEND_API_KEY=your_resend_api_key
    - Records of tutoring sessions
    - Links tutors, students, and subjects
    - Tracks timing and status
+   - Includes payment status and Stripe payment intent ID
 
 6. `session_payments`
    - Payment records for sessions
    - Handles platform fees and tutor payouts
    - Tracks payment status and history
+   - Integrated with Stripe Connect destination charges
 
 7. `reviews`
    - Student reviews for tutors
@@ -130,6 +144,13 @@ RESEND_API_KEY=your_resend_api_key
 
 ## Session Management
 
+### Enhanced Session Management (Latest Implementation)
+- **Advanced Filtering**: Time-based, status, payment, and subject filters
+- **Search Functionality**: Search by tutor/student name or subject
+- **Smart Pagination**: 12 sessions per page with intelligent page navigation
+- **Responsive Design**: Mobile-first approach with collapsible advanced filters
+- **Real-time Updates**: Immediate UI feedback for status changes and deletions
+
 ### Session Creation
 - Only tutors can create sessions
 - Tutors must create sessions where they are the tutor
@@ -137,35 +158,56 @@ RESEND_API_KEY=your_resend_api_key
 - Price = Duration in hours × Hourly Rate
 - Students receive notifications, can view but not modify
 
-2. **Session Booking Flow**
-   - Tutors can initiate booking from chat or student profiles
-   - Session details include:
-     - Date and time selection
-     - Duration options:
-       - Preset durations (30min, 1hr, 1.5hr, 2hr)
-       - Custom duration with 15-minute increments
-       - Minimum duration of 15 minutes
-     - Subject (from tutor's available subjects)
-     - Rate management:
-       - Default rate from tutor profile
-       - Adjustable per session
-       - Real-time price calculation
-       - Price = (Duration in hours × Hourly Rate)
-   - Students receive notification of new session
-   - Students can view but not modify session details
+### Session Booking Flow
+- Tutors can initiate booking from chat or student profiles
+- Session details include:
+  - Date and time selection
+  - Duration options:
+    - Preset durations (30min, 1hr, 1.5hr, 2hr)
+    - Custom duration with 15-minute increments
+    - Minimum duration of 15 minutes
+  - Subject (from tutor's available subjects)
+  - Rate management:
+    - Default rate from tutor profile
+    - Adjustable per session
+    - Real-time price calculation
+    - Price = (Duration in hours × Hourly Rate)
+- Students receive notification of new session
+- Students can view but not modify session details
 
-3. **Session States**
-   - Scheduled: Initial state when created
-   - Completed: After session ends
-   - Cancelled: If session is cancelled
+### Session States
+- Scheduled: Initial state when created
+- Completed: After session ends
+- Cancelled: If session is cancelled
 
-4. **Pricing Structure**
-   - Based on tutor's hourly rate
-   - Rate can be adjusted per session
-   - Price calculated based on actual duration
-   - Supports fractional hours
-   - Minimum 15-minute increments
-   - Real-time price updates during booking
+### Pricing Structure
+- Based on tutor's hourly rate
+- Rate can be adjusted per session
+- Price calculated based on actual duration
+- Supports fractional hours
+- Minimum 30-minute increments
+- Real-time price updates during booking
+
+## Payment System (Stripe Connect)
+
+### Implementation
+- **Stripe Connect**: Destination charges for automatic platform fee handling
+- **Tutor Onboarding**: Express dashboard integration for tutor account setup
+- **Payment Flow**: Direct charges with automatic platform fee deduction
+- **Payout System**: Automatic transfers to tutor Stripe accounts
+
+### Key Features
+- **Express Dashboard**: One-time login links for tutors to access Stripe dashboard
+- **Platform Fees**: Automatic deduction of platform fees from session payments
+- **Payment Status Tracking**: Real-time payment status updates
+- **Secure Processing**: Server-side payment processing with webhook validation
+
+### API Endpoints
+- `POST /api/payments/create-intent` - Creates payment intent with destination charges
+- `POST /api/stripe/onboard-tutor` - Initiates tutor Stripe Connect onboarding
+- `POST /api/stripe/create-login-link` - Generates Express dashboard login links
+- `POST /api/webhooks/stripe` - Handles Stripe webhook events
+- `GET /api/stripe/tutor-status` - Checks tutor onboarding status
 
 ## Authentication Flow
 
@@ -261,6 +303,12 @@ profile-images/
 - Keep component state local when possible
 - Handle loading and error states properly
 
+### Performance Optimization
+- Use `useMemo` for expensive calculations
+- Implement client-side filtering for better UX
+- Optimize pagination with efficient array slicing
+- Use responsive design for mobile-first approach
+
 ## Common Issues & Solutions
 
 1. **Authentication**
@@ -287,9 +335,11 @@ profile-images/
    - Monitor email delivery rates
    - Implement proper rate limiting to prevent spam
 
-## Testing (Planned)
+
+## Testing (Implemented)
 
 1. **Unit Tests**
+   - Session filtering logic testing
    - Component testing with Jest
    - API route testing
    - Utility function testing
@@ -312,6 +362,7 @@ profile-images/
 - All database operations must respect RLS policies
 - Authentication handled through Supabase Auth
 - Role-based access (student/tutor)
+- Payment processing through Stripe Connect
 
 ### Important Rules
 1. **Database Operations**: Always check RLS policies, never expose sensitive data
@@ -319,6 +370,7 @@ profile-images/
 3. **Security**: Never expose API keys, always validate input
 4. **Code Style**: Use TypeScript, follow Next.js 14 best practices
 5. **Feature Implementation**: Check existing implementations, consider both perspectives
+6. **Payment Processing**: Use Stripe Connect destination charges, handle webhooks securely
 
 ### Common Pitfalls to Avoid
 1. **Authentication**
@@ -340,6 +392,11 @@ profile-images/
    - Don't expose environment variables
    - Don't trust client-side data
    - Don't skip input validation
+
+5. **Payments**
+   - Don't process payments client-side
+   - Don't skip webhook signature verification
+   - Don't ignore payment status updates
 
 ### Best Practices
 1. **Code Organization**
