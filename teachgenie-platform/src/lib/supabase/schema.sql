@@ -121,6 +121,18 @@ CREATE TABLE public.message_notifications (
   PRIMARY KEY (id)
 );
 
+-- External reviews (from other platforms like Google, Yelp, Wyzant)
+CREATE TABLE public.external_reviews (
+  id UUID DEFAULT uuid_generate_v4(),
+  tutor_id UUID REFERENCES public.tutor_profiles ON DELETE CASCADE,
+  reviewer_name TEXT NOT NULL,
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  comment TEXT,
+  source_platform TEXT NOT NULL CHECK (source_platform IN ('google', 'yelp', 'wyzant', 'superprof', 'varsity tutors','other')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  PRIMARY KEY (id)
+);
+
 -- Performance Indexes (Speed up common queries)
 CREATE INDEX IF NOT EXISTS idx_sessions_tutor_id ON public.sessions(tutor_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_student_id ON public.sessions(student_id);
@@ -138,6 +150,9 @@ CREATE INDEX IF NOT EXISTS idx_tutor_profiles_verified ON public.tutor_profiles(
 CREATE INDEX IF NOT EXISTS idx_session_payments_session_id ON public.session_payments(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_payments_status ON public.session_payments(status);
 CREATE INDEX IF NOT EXISTS idx_session_payments_stripe_payment_intent_id ON public.session_payments(stripe_payment_intent_id);
+CREATE INDEX IF NOT EXISTS idx_external_reviews_tutor_id ON public.external_reviews(tutor_id);
+CREATE INDEX IF NOT EXISTS idx_external_reviews_source_platform ON public.external_reviews(source_platform);
+CREATE INDEX IF NOT EXISTS idx_external_reviews_created_at ON public.external_reviews(created_at);
 
 -- Row Level Security (RLS) Policies
 
@@ -153,6 +168,7 @@ ALTER TABLE public.chat_rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.message_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.external_reviews ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies by table
 -- Profiles policies
@@ -458,6 +474,29 @@ CREATE POLICY "Update own notifications"
 CREATE POLICY "Create notifications"
   ON public.message_notifications FOR INSERT
   WITH CHECK (auth.role() = 'service_role');
+
+-- External reviews policies
+CREATE POLICY "View all external reviews"
+  ON public.external_reviews FOR SELECT
+  USING (true);
+
+CREATE POLICY "Create external review"
+  ON public.external_reviews FOR INSERT
+  WITH CHECK (
+    auth.uid() = tutor_id AND
+    EXISTS (
+      SELECT 1 FROM public.tutor_profiles
+      WHERE tutor_profiles.id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Update external review"
+  ON public.external_reviews FOR UPDATE
+  USING (auth.uid() = tutor_id);
+
+CREATE POLICY "Delete external review"
+  ON public.external_reviews FOR DELETE
+  USING (auth.uid() = tutor_id);
 
 -- Storage bucket policies for profile images
 CREATE POLICY "Users can upload their own profile images"

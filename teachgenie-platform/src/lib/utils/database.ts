@@ -7,6 +7,7 @@ type TutorProfile = Tables['tutor_profiles']['Row']
 type Subject = Tables['subjects']['Row']
 type Session = Tables['sessions']['Row']
 type Review = Tables['reviews']['Row']
+type ExternalReview = Tables['external_reviews']['Row']
 
 export async function getProfile(userId: string): Promise<Profile | null> {
   const supabase = createClient()
@@ -119,6 +120,22 @@ export async function getTutorReviews(tutorId: string): Promise<Review[]> {
 
   if (error) {
     console.error('Error fetching tutor reviews:', error)
+    return []
+  }
+
+  return data
+}
+
+export async function getExternalReviews(tutorId: string): Promise<ExternalReview[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('external_reviews')
+    .select('*')
+    .eq('tutor_id', tutorId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching external reviews:', error)
     return []
   }
 

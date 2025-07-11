@@ -65,6 +65,16 @@ export interface Review {
   updated_at: string
 }
 
+export interface ExternalReview {
+  id: string
+  tutor_id: string
+  reviewer_name: string
+  rating: number
+  comment: string | null
+  source_platform: 'google' | 'yelp' | 'wyzant' | 'superprof' | 'varsity tutors' | 'other'
+  created_at: string
+}
+
 export interface ChatRoom {
   id: string
   created_at: string
@@ -126,6 +136,11 @@ export interface Database {
         Row: Review
         Insert: Omit<Review, 'id' | 'created_at'>
         Update: Partial<Omit<Review, 'id' | 'created_at'>>
+      }
+      external_reviews: {
+        Row: ExternalReview
+        Insert: Omit<ExternalReview, 'id' | 'created_at'>
+        Update: Partial<Omit<ExternalReview, 'id' | 'created_at'>>
       }
       chat_rooms: {
         Row: ChatRoom

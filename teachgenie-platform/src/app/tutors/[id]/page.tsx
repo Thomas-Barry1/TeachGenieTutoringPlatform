@@ -16,6 +16,7 @@ type Tutor = Database['public']['Tables']['tutor_profiles']['Row'] & {
   reviews: (Database['public']['Tables']['reviews']['Row'] & {
     student: Profile
   })[]
+  external_reviews: Database['public']['Tables']['external_reviews']['Row'][]
 }
 
 export default function TutorProfilePage() {
@@ -42,7 +43,8 @@ export default function TutorProfilePage() {
         reviews:reviews(
           *,
           student:profiles(*)
-        )
+        ),
+        external_reviews:external_reviews(*)
       `)
       .eq('id', id)
       .single()
@@ -59,7 +61,8 @@ export default function TutorProfilePage() {
           reviews: data.reviews.map((r: any) => ({
             ...r,
             student: r.student
-          }))
+          })),
+          external_reviews: data.external_reviews
         }
 
         setTutor(transformedTutor)
@@ -181,31 +184,39 @@ export default function TutorProfilePage() {
       {/* Reviews Section */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-lg font-semibold mb-4">Reviews</h2>
-        {tutor.reviews.length > 0 ? (
+        
+        {(tutor.reviews.length > 0 || tutor.external_reviews.length > 0) ? (
           <div className="space-y-6">
-            {tutor.reviews.map(review => (
+            {/* Combine and sort all reviews by creation date */}
+            {[...tutor.reviews.map(review => ({
+              ...review,
+              reviewer_name: user 
+                ? (review.student ? `${review.student.first_name} ${review.student.last_name}` : 'Student (private)')
+                : 'Student (private)',
+              avatar_url: user ? (review.student?.avatar_url || null) : null
+            })), ...tutor.external_reviews.map(review => ({
+              ...review,
+              reviewer_name: user ? review.reviewer_name : 'Student (private)',
+              avatar_url: null
+            }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .map((review, index) => (
               <div key={review.id} className="border-b border-gray-200 pb-6 last:border-0">
                 <div className="flex items-center space-x-4">
                   <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200">
-                    {review.student && review.student.avatar_url ? (
+                    {review.avatar_url ? (
                       <img
-                        src={review.student.avatar_url}
-                        alt={`${review.student.first_name} ${review.student.last_name}`}
+                        src={review.avatar_url}
+                        alt={review.reviewer_name}
                         className="h-full w-full object-cover"
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-gray-400">
-                        ?
+                        {review.reviewer_name.charAt(0).toUpperCase()}
                       </div>
                     )}
                   </div>
-                  <div>
-                    <h3 className="font-medium">
-                      {review.student 
-                        ? `${review.student.first_name} ${review.student.last_name}`
-                        : 'Student (private)'
-                      }
-                    </h3>
+                  <div className="flex-1">
+                    <h3 className="font-medium">{review.reviewer_name}</h3>
                     <div className="flex items-center mt-1">
                       {[...Array(5)].map((_, i) => (
                         <svg
@@ -234,4 +245,4 @@ export default function TutorProfilePage() {
       </div>
     </div>
   )
-} 
+}

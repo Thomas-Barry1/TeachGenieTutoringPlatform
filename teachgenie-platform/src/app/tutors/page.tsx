@@ -73,16 +73,33 @@ export default function TutorsPage() {
             subjects: tutor.subjects?.map((s: any) => s.subject) || []
           }))
         setTutors(transformedTutors)
-        // Fetch review summary for each tutor (for all users)
+        // Fetch review summary for each tutor (including external reviews)
         const summaries: Record<string, { avg: number, count: number }> = {}
         await Promise.all(transformedTutors.map(async (tutor) => {
-          const { data: reviews, error: reviewsError } = await supabase
+          // Fetch platform reviews
+          const { data: platformReviews, error: platformReviewsError } = await supabase
             .from('reviews')
             .select('rating')
             .eq('tutor_id', tutor.id)
-          if (!reviewsError && reviews && reviews.length > 0) {
-            const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-            summaries[tutor.id] = { avg, count: reviews.length }
+          
+          // Fetch external reviews
+          const { data: externalReviews, error: externalReviewsError } = await supabase
+            .from('external_reviews')
+            .select('rating')
+            .eq('tutor_id', tutor.id)
+          
+          if (!platformReviewsError && !externalReviewsError) {
+            const allReviews = [
+              ...(platformReviews || []),
+              ...(externalReviews || [])
+            ]
+            
+            if (allReviews.length > 0) {
+              const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+              summaries[tutor.id] = { avg, count: allReviews.length }
+            } else {
+              summaries[tutor.id] = { avg: 0, count: 0 }
+            }
           } else {
             summaries[tutor.id] = { avg: 0, count: 0 }
           }
