@@ -12,19 +12,23 @@ type Session = Database['public']['Tables']['sessions']['Row'] & {
   subject: Database['public']['Tables']['subjects']['Row']
 }
 
+type Review = Database['public']['Tables']['reviews']['Row']
+
 function ReviewPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const sessionId = searchParams.get('sessionId')
   const [session, setSession] = useState<Session | null>(null)
+  const [existingReview, setExistingReview] = useState<Review | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [rating, setRating] = useState(5)
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
-    async function loadSession() {
+    async function loadSessionAndReview() {
       if (!sessionId) {
         setError('No session ID provided')
         setLoading(false)
@@ -32,7 +36,17 @@ function ReviewPage() {
       }
 
       const supabase = createClient()
-      const { data, error } = await supabase
+      
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setError('You must be logged in to write a review')
+        setLoading(false)
+        return
+      }
+
+      // Load session
+      const { data: sessionData, error: sessionError } = await supabase
         .from('sessions')
         .select(`
           *,
@@ -44,30 +58,57 @@ function ReviewPage() {
         .eq('id', sessionId)
         .single()
 
-      if (error) {
+      if (sessionError) {
         setError('Failed to load session')
         setLoading(false)
         return
       }
 
-      if (!data) {
+      if (!sessionData) {
         setError('Session not found')
         setLoading(false)
         return
       }
 
-      if (data.status !== 'completed') {
+      if (sessionData.status !== 'completed') {
         setError('Can only review completed sessions')
         setLoading(false)
         return
       }
 
-      setSession(data)
+      // Check if user is the student for this session
+      if (sessionData.student_id !== user.id) {
+        setError('You can only review sessions you participated in')
+        setLoading(false)
+        return
+      }
+
+      setSession(sessionData)
+
+      // Check for existing review
+      const { data: existingReviewData, error: reviewError } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('session_id', sessionId)
+        .eq('student_id', user.id)
+        .single()
+
+      if (existingReviewData) {
+        setExistingReview(existingReviewData)
+        setRating(existingReviewData.rating)
+        setComment(existingReviewData.comment || '')
+        setIsEditing(true)
+      }
+
       setLoading(false)
     }
 
-    loadSession()
+    loadSessionAndReview()
   }, [sessionId])
+
+  const canEdit = () => {
+    return existingReview !== null
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,23 +117,52 @@ function ReviewPage() {
     setSubmitting(true)
     const supabase = createClient()
 
-    const { error } = await supabase
-      .from('reviews')
-      .insert({
-        session_id: session.id,
-        student_id: session.student_id,
-        tutor_id: session.tutor_id,
-        rating,
-        comment
-      })
+    try {
+      if (isEditing && existingReview) {
+        // Update existing review
 
-    if (error) {
-      setError('Failed to submit review')
+        const { error } = await supabase
+          .from('reviews')
+          .update({
+            rating,
+            comment,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingReview.id)
+
+        if (error) {
+          setError('Failed to update review')
+          setSubmitting(false)
+          return
+        }
+      } else {
+        // Create new review
+        const { error } = await supabase
+          .from('reviews')
+          .insert({
+            session_id: session.id,
+            student_id: session.student_id,
+            tutor_id: session.tutor_id,
+            rating,
+            comment
+          })
+
+        if (error) {
+          if (error.code === '23505') { // Unique constraint violation
+            setError('You have already reviewed this session')
+          } else {
+            setError('Failed to submit review')
+          }
+          setSubmitting(false)
+          return
+        }
+      }
+
+      router.push('/dashboard')
+    } catch (err) {
+      setError('An unexpected error occurred')
       setSubmitting(false)
-      return
     }
-
-    router.push('/dashboard')
   }
 
   if (loading) {
@@ -134,13 +204,22 @@ function ReviewPage() {
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-6">Write a Review</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+            {isEditing ? 'Edit Review' : 'Write a Review'}
+          </h1>
           
           <div className="mb-6">
             <h2 className="text-lg font-medium text-gray-900">
               Session with {session.tutor.profile.first_name} {session.tutor.profile.last_name}
             </h2>
             <p className="text-gray-600">{session.subject.name}</p>
+            {isEditing && (
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  You can edit your review at any time to provide updated feedback.
+                </p>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -200,7 +279,7 @@ function ReviewPage() {
                 disabled={submitting}
                 className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50"
               >
-                {submitting ? 'Submitting...' : 'Submit Review'}
+                {submitting ? 'Submitting...' : (isEditing ? 'Update Review' : 'Submit Review')}
               </button>
             </div>
           </form>

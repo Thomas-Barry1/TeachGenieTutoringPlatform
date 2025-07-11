@@ -78,7 +78,9 @@ CREATE TABLE public.reviews (
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-  PRIMARY KEY (id)
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  PRIMARY KEY (id),
+  UNIQUE(session_id, student_id) -- Prevent multiple reviews per session per student
 );
 
 -- Chat rooms
@@ -358,6 +360,14 @@ CREATE POLICY "Create session review"
       AND sessions.status = 'completed'
     )
   );
+
+CREATE POLICY "Update own review"
+  ON public.reviews FOR UPDATE
+  USING (auth.uid() = student_id);
+
+CREATE POLICY "Delete own review"
+  ON public.reviews FOR DELETE
+  USING (auth.uid() = student_id);
 
 -- Chat rooms policies
 CREATE POLICY "View own chat rooms"

@@ -1,6 +1,8 @@
 'use client'
 
 import { format } from 'date-fns'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
 
 type Session = Database['public']['Tables']['sessions']['Row'] & {
@@ -13,6 +15,8 @@ type Session = Database['public']['Tables']['sessions']['Row'] & {
   subject: Database['public']['Tables']['subjects']['Row']
 }
 
+type Review = Database['public']['Tables']['reviews']['Row']
+
 interface SessionCardProps {
   session: Session
   userType: 'student' | 'tutor'
@@ -24,8 +28,41 @@ export default function SessionCard({ session, userType, onStatusChange, onDelet
   const startTime = new Date(session.start_time)
   const endTime = new Date(session.end_time)
   const otherParty = userType === 'student' ? session.tutor?.profile : session.student?.profile
+  const [existingReview, setExistingReview] = useState<Review | null>(null)
+  const [loadingReview, setLoadingReview] = useState(false)
   console.log("SessionCard", session)
   console.log("otherParty", otherParty)
+
+  // Check for existing review when component mounts
+  useEffect(() => {
+    async function checkExistingReview() {
+      if (userType === 'student' && session.status === 'completed') {
+        setLoadingReview(true)
+        const supabase = createClient()
+        
+        try {
+          const { data: { user } } = await supabase.auth.getUser()
+          if (user) {
+            const { data } = await supabase
+              .from('reviews')
+              .select('*')
+              .eq('session_id', session.id)
+              .eq('student_id', user.id)
+              .single()
+            
+            setExistingReview(data)
+          }
+        } catch (error) {
+          // Review doesn't exist or other error
+          setExistingReview(null)
+        } finally {
+          setLoadingReview(false)
+        }
+      }
+    }
+
+    checkExistingReview()
+  }, [session.id, session.status, userType])
 
   const getStatusColor = (status: Session['status']) => {
     switch (status) {
@@ -171,12 +208,25 @@ export default function SessionCard({ session, userType, onStatusChange, onDelet
 
         {session.status === 'completed' && userType === 'student' && (
           <div className="mt-6">
-            <a
-              href={`/reviews/?sessionId=${session.id}`}
-              className="block w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            >
-              Write a Review
-            </a>
+            {loadingReview ? (
+              <div className="block w-full text-center px-4 py-2 bg-gray-400 text-white rounded-lg">
+                Loading...
+              </div>
+            ) : existingReview ? (
+                             <a
+                 href={`/reviews/?sessionId=${session.id}`}
+                 className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+               >
+                 Edit Review
+               </a>
+            ) : (
+              <a
+                href={`/reviews/?sessionId=${session.id}`}
+                className="block w-full text-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Write a Review
+              </a>
+            )}
           </div>
         )}
 
