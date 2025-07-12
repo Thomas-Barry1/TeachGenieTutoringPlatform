@@ -182,7 +182,7 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
-                  <p className="text-gray-600 mb-6 italic">"{testimonial.content}"</p>
+                  <p className="text-gray-600 mb-6 italic">&quot;{testimonial.content}&quot;</p>
                   <div className="flex items-center">
                     <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-semibold">{testimonial.name.charAt(0)}</span>
