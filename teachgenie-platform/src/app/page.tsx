@@ -298,7 +298,7 @@ const testimonials = [
   {
     name: 'Sarah Johnson',
     role: 'Student',
-    content: 'TeachGenie helped me improve my math grades from a C to an A. My tutor was amazing and really patient with me.',
+    content: 'My tutor helped me improve my essay writing skills so much! I went from struggling with structure to getting A\'s on my papers. The feedback was always detailed and constructive.',
   },
   {
     name: 'Michael Chen',
