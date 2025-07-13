@@ -174,7 +174,7 @@ export default function Home() {
           <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
               {testimonials.map((testimonial) => (
-                <div key={testimonial.name} className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div key={testimonial.name} className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
                   <div className="flex items-center mb-6">
                     <div className="flex text-yellow-400">
                       {[...Array(5)].map((_, i) => (
@@ -182,11 +182,21 @@ export default function Home() {
                       ))}
                     </div>
                   </div>
-                  <p className="text-gray-600 mb-6 italic">&quot;{testimonial.content}&quot;</p>
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold">{testimonial.name.charAt(0)}</span>
-                    </div>
+                  <p className="text-gray-600 mb-6 italic flex-grow">&quot;{testimonial.content}&quot;</p>
+                  <div className="flex items-center mt-auto">
+                    {testimonial.image ? (
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                        <img
+                          src={testimonial.image}
+                          alt={testimonial.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white font-semibold">{testimonial.name.charAt(0)}</span>
+                      </div>
+                    )}
                     <div className="ml-4">
                       <div className="font-semibold text-gray-900">{testimonial.name}</div>
                       <div className="text-sm text-gray-600">{testimonial.role}</div>
@@ -301,13 +311,15 @@ const testimonials = [
     content: 'My tutor helped me improve my essay writing skills so much! I went from struggling with structure to getting A\'s on my papers. The feedback was always detailed and constructive.',
   },
   {
-    name: 'Michael Chen',
+    name: 'Thomas Barry',
     role: 'Tutor',
-    content: 'I love teaching on TeachGenie! The platform is easy to use and I can help students from anywhere in the world.',
+    content: 'I love teaching on TeachGenie! The platform is incredibly user-friendly and makes it easy to connect with students from anywhere in the world. The payment system is seamless, and I appreciate how the platform handles administrative details so I can focus on teaching.',
+    image: '/testimonials/Thomas_Tutor.jpg' // Optional: Add student/tutor photos
   },
   {
-    name: 'Emily Rodriguez',
-    role: 'Student',
-    content: 'The flexibility of scheduling sessions around my busy schedule has been incredible. Highly recommend!',
+    name: 'Jeannie Au',
+    role: 'Tutor',
+    content: 'The TeachGenie platform is an excellent environment for tutors who are passionate about making a positive impact on students’ academic journeys. The supportive community and robust tools make it an ideal place to grow as a tutor and help students succeed.',
+    image: '/testimonials/Jeannie_Tutor.jpg' // Optional: Add student/tutor photos
   },
 ] 
