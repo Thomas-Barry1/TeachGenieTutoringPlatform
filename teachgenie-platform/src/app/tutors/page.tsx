@@ -115,7 +115,10 @@ export default function TutorsPage() {
     const matchesSearch = searchQuery === '' || 
       tutor.profile.first_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tutor.profile.last_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tutor.bio?.toLowerCase().includes(searchQuery.toLowerCase())
+      tutor.bio?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tutor.subjects.some(subject => 
+        subject.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
 
     const matchesSubject = selectedSubject === '' ||
       tutor.subjects.some(subject => subject.id === selectedSubject)
