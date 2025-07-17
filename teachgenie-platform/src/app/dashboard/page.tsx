@@ -167,22 +167,13 @@ export default function DashboardPage() {
       <div className="bg-white shadow rounded-lg p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg font-medium text-gray-900">Profile Information</h2>
-          {!isEditing ? (
+          {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
             >
               Edit Profile
             </button>
-          ) : (
-            <div className="space-x-2">
-              <button
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-            </div>
           )}
         </div>
         <dl className="mt-4 space-y-6">
@@ -233,9 +224,25 @@ export default function DashboardPage() {
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">Account Type</dt>
-            <dd className="mt-1 text-sm text-gray-900 capitalize">
-              {profile.user_type}
-            </dd>
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+              <div className="flex-1">
+                <dd className="mt-1 text-sm text-gray-900 capitalize">
+                  {profile.user_type}
+                </dd>
+              </div>
+              
+              {/* Save/Cancel buttons for Profile Information - only shown when editing */}
+              {isEditing && (
+                <div className="flex flex-col sm:flex-row gap-3 sm:ml-4">
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </dl>
       </div>
@@ -244,32 +251,13 @@ export default function DashboardPage() {
         <div className="bg-white shadow rounded-lg p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-medium text-gray-900">Tutor Profile</h2>
-            {!isEditing ? (
+            {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
               >
                 Edit Profile
               </button>
-            ) : (
-              <div className="space-x-2">
-                <button
-                  onClick={handleSaveProfile}
-                  className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => {
-                    setIsEditing(false)
-                    setEditedBio(tutorProfile.bio || '')
-                    setEditedRate(tutorProfile.hourly_rate?.toString() || '')
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-              </div>
             )}
           </div>
 
@@ -333,31 +321,57 @@ export default function DashboardPage() {
 
             <div>
               <dt className="text-sm font-medium text-gray-500">Hourly Rate</dt>
-              {isEditing ? (
-                <div className="mt-1">
-                  <div className="relative rounded-md shadow-sm">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <span className="text-gray-500 sm:text-sm">$</span>
+              <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                <div className="flex-1">
+                  {isEditing ? (
+                    <div className="mt-1">
+                      <div className="relative rounded-md shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <span className="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input
+                          type="number"
+                          value={editedRate}
+                          onChange={(e) => setEditedRate(e.target.value)}
+                          className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                        />
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                          <span className="text-gray-500 sm:text-sm">/hr</span>
+                        </div>
+                      </div>
                     </div>
-                    <input
-                      type="number"
-                      value={editedRate}
-                      onChange={(e) => setEditedRate(e.target.value)}
-                      className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                    />
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                      <span className="text-gray-500 sm:text-sm">/hr</span>
-                    </div>
-                  </div>
+                  ) : (
+                    <dd className="mt-1 text-sm text-gray-900">
+                      {tutorProfile.hourly_rate ? `$${tutorProfile.hourly_rate}/hr` : 'Not set'}
+                    </dd>
+                  )}
                 </div>
-              ) : (
-                <dd className="mt-1 text-sm text-gray-900">
-                  {tutorProfile.hourly_rate ? `$${tutorProfile.hourly_rate}/hr` : 'Not set'}
-                </dd>
-              )}
+                
+                {/* Save/Cancel buttons for Tutor Profile - only shown when editing */}
+                {isEditing && (
+                  <div className="flex flex-col sm:flex-row gap-3 sm:ml-4">
+                    <button
+                      onClick={handleSaveProfile}
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsEditing(false)
+                        setEditedBio(tutorProfile.bio || '')
+                        setEditedRate(tutorProfile.hourly_rate?.toString() || '')
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
