@@ -91,11 +91,16 @@ export async function POST(request: NextRequest) {
     const account = await stripe.accounts.create({
       type: 'express',
       email: profile.email,
+      country: 'US',
       capabilities: {
         card_payments: { requested: true },
         transfers: { requested: true },
       },
       business_type: 'individual',
+      business_profile: {
+        mcc: '8299',
+        product_description: 'I am a tutor',
+      },
       individual: {
         email: profile.email,
         first_name: profile.first_name || '',
