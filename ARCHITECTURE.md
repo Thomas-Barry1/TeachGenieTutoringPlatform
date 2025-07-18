@@ -322,6 +322,16 @@ const isVerifiedTutor = isTutor && tutorProfile?.is_verified
 - **Desktop**: Dropdown menu in main navigation with hover effects
 - **Mobile**: Collapsible section in mobile menu
 
+## Analytics & Monitoring
+
+### Vercel Web Analytics
+- **Package**: `@vercel/analytics` for Next.js integration
+- **Setup**: Enable in Vercel dashboard under Analytics tab
+- **Implementation**: Analytics component added to root layout
+- **Tracking**: Automatic visitor and page view tracking
+- **Routes**: Creates `/_vercel/insights/*` routes for data collection
+- **Deployment**: Requires Vercel deployment for activation
+
 ## Development Guidelines
 
 ### Type Safety
