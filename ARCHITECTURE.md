@@ -285,6 +285,43 @@ profile-images/
 - **Security**: Signed URLs with expiration, CORS configuration, rate limiting
 - **Performance**: Lazy loading, progressive loading, browser caching
 
+## AI Tutors Tools
+
+### Overview
+Premium feature available exclusively to verified tutors, providing access to specialized AI-powered educational tools hosted on `teach.webexpansions.com`.
+
+### Access Control
+- **User Type**: Must be a tutor (not a student)
+- **Verification Status**: Must be verified by the platform (`tutor_profiles.is_verified = true`)
+- **Location**: Available in main navigation header as dropdown menu
+
+### Available Tools
+1. **Gap Assessment** - Identify knowledge gaps in student understanding
+2. **Test Creator** - Generate customized tests and quizzes
+3. **Kahoot Generator** - Create interactive Kahoot-style quizzes
+4. **Lesson Plan** - Generate structured lesson plans
+5. **Activities** - Access library of educational activities
+
+### Technical Implementation
+- **Component**: `src/components/layout/Header.tsx`
+- **Conditional Rendering**: Only appears for verified tutors
+- **Responsive Design**: Desktop dropdown and mobile collapsible menu
+- **External Links**: All tools link to `teach.webexpansions.com` with proper security attributes
+
+### Access Control Logic
+```typescript
+const isVerifiedTutor = isTutor && tutorProfile?.is_verified
+```
+
+### Security Features
+- **Server-side Verification**: Database checks through RLS policies
+- **External Links**: All links use `target="_blank"` and `rel="noopener noreferrer"`
+- **Access Validation**: Verification status checked on component mount
+
+### User Experience
+- **Desktop**: Dropdown menu in main navigation with hover effects
+- **Mobile**: Collapsible section in mobile menu
+
 ## Development Guidelines
 
 ### Type Safety

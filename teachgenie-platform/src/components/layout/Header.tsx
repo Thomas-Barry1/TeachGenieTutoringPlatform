@@ -25,6 +25,9 @@ export default function Header() {
     avatar_url: string | null
     user_type: 'student' | 'tutor' | null
   } | null>(null)
+  const [tutorProfile, setTutorProfile] = useState<{
+    is_verified: boolean
+  } | null>(null)
 
   useEffect(() => {
     async function loadProfile() {
@@ -39,6 +42,19 @@ export default function Header() {
 
       if (!error && data) {
         setProfile(data)
+        
+        // If user is a tutor, load tutor profile for verification status
+        if (data.user_type === 'tutor') {
+          const { data: tutorData, error: tutorError } = await supabase
+            .from('tutor_profiles')
+            .select('is_verified')
+            .eq('id', user.id)
+            .single()
+
+          if (!tutorError && tutorData) {
+            setTutorProfile(tutorData)
+          }
+        }
       }
     }
 
@@ -46,6 +62,7 @@ export default function Header() {
   }, [user])
 
   const isTutor = profile?.user_type === 'tutor'
+  const isVerifiedTutor = isTutor && tutorProfile?.is_verified
 
   return (
     <Disclosure as="nav" className="bg-white shadow">
@@ -74,6 +91,113 @@ export default function Header() {
                       {item.name}
                     </Link>
                   ))}
+                  {/* AI Tutors Tools Dropdown - Only for verified tutors */}
+                  {isVerifiedTutor && (
+                    <Menu as="div" className="relative flex items-stretch">
+                      <MenuButton
+                        className={classNames(
+                          pathname.startsWith('/ai-tools')
+                            ? 'border-primary-500 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                          'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium h-full focus:outline-none bg-white'
+                        )}
+                        style={{ height: '100%' }}
+                                              >
+                          <div className="flex items-center">
+                            <span>AI Tutors Tools</span>
+                          </div>
+                          <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
+                        </MenuButton>
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-200"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <MenuItems className="absolute left-0 top-full z-10 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <MenuItem>
+                            {({ active }) => (
+                              <a
+                                href="https://teach.webexpansions.com/gap-assessment"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Gap Assessment
+                              </a>
+                            )}
+                          </MenuItem>
+                          <MenuItem>
+                            {({ active }) => (
+                              <a
+                                href="https://teach.webexpansions.com/test-creator"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Test Creator
+                              </a>
+                            )}
+                          </MenuItem>
+                          <MenuItem>
+                            {({ active }) => (
+                              <a
+                                href="https://teach.webexpansions.com/kahoot-generator"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Kahoot Generator
+                              </a>
+                            )}
+                          </MenuItem>
+                          <MenuItem>
+                            {({ active }) => (
+                              <a
+                                href="https://teach.webexpansions.com/lesson-plan"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Lesson Plan
+                              </a>
+                            )}
+                          </MenuItem>
+                          <MenuItem>
+                            {({ active }) => (
+                              <a
+                                href="https://teach.webexpansions.com/activities"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Activities
+                              </a>
+                            )}
+                          </MenuItem>
+                        </MenuItems>
+                      </Transition>
+                    </Menu>
+                  )}
+                  
                   {/* Dashboard Dropdown */}
                   {(
                     <Menu as="div" className="relative flex items-stretch">
@@ -277,6 +401,62 @@ export default function Header() {
                   {item.name}
                 </Disclosure.Button>
               ))}
+              
+              {/* Mobile AI Tutors Tools Menu - Only for verified tutors */}
+              {isVerifiedTutor && (
+                <>
+                  <Disclosure.Button
+                    as="div"
+                    className="border-transparent text-gray-500 block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                  >
+                    <div className="flex items-center text-sm font-medium text-gray-900 mb-2">
+                      <span>AI Tutors Tools</span>
+                    </div>
+                    <div className="space-y-1">
+                      <a
+                        href="https://teach.webexpansions.com/gap-assessment"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-gray-600 hover:text-gray-900 pl-4"
+                      >
+                        Gap Assessment
+                      </a>
+                      <a
+                        href="https://teach.webexpansions.com/test-creator"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-gray-600 hover:text-gray-900 pl-4"
+                      >
+                        Test Creator
+                      </a>
+                      <a
+                        href="https://teach.webexpansions.com/kahoot-generator"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-gray-600 hover:text-gray-900 pl-4"
+                      >
+                        Kahoot Generator
+                      </a>
+                      <a
+                        href="https://teach.webexpansions.com/lesson-plan"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-gray-600 hover:text-gray-900 pl-4"
+                      >
+                        Lesson Plan
+                      </a>
+                      <a
+                        href="https://teach.webexpansions.com/activities"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-sm text-gray-600 hover:text-gray-900 pl-4"
+                      >
+                        Activities
+                      </a>
+                    </div>
+                  </Disclosure.Button>
+                </>
+              )}
               
               {/* Mobile Dashboard Menu */}
               {(
