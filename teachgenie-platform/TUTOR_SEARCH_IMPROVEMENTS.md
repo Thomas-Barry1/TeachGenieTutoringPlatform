@@ -7,8 +7,7 @@ Enhanced tutor search with advanced filtering, pagination, and improved UX for t
 
 ### TutorFilters (`src/components/tutors/TutorFilters.tsx`)
 - **Search Bar**: Text search across names, bios, and subjects
-- **Quick Filters**: Price range buttons (All, Under $25, $25-$50, $50-$75, $75-$100, Over $100)
-- **Advanced Filters**: Collapsible subject and rating dropdowns
+- **Advanced Filters**: Collapsible section with subject, price range, and rating dropdowns
 - **Filter Summary**: Shows active filters and result counts
 
 ### TutorPagination (`src/components/tutors/TutorPagination.tsx`)
@@ -25,7 +24,7 @@ Enhanced tutor search with advanced filtering, pagination, and improved UX for t
 ## Filter Types
 - **Text Search**: Name, bio, subjects
 - **Subject Filter**: Dropdown with all subjects
-- **Price Range**: 6 brackets via quick buttons
+- **Price Range**: Dropdown with 6 price brackets (All, Under $25, $25-$50, $50-$75, $75-$100, Over $100)
 - **Rating Filter**: 4+, 4.5+, 5 stars
 
 ## Technical Features
@@ -44,6 +43,6 @@ Enhanced tutor search with advanced filtering, pagination, and improved UX for t
 - **Test File**: `src/components/tutors/TutorFilters.test.tsx` (12 tests passing)
 
 ## Recent Changes
-- **Removed**: Availability filter (unimplemented), search tips, redundant price dropdown
-- **Added**: Complete price range buttons ($75-$100, Over $100)
-- **Simplified**: Advanced filters to subject and rating only 
+- **Removed**: Availability filter (unimplemented), search tips, quick filter price buttons
+- **Added**: Price range dropdown in advanced filters
+- **Simplified**: Clean interface with all filters in collapsible section 

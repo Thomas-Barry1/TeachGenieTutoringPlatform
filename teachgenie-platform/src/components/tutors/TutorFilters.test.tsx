@@ -32,16 +32,6 @@ describe('TutorFilters', () => {
     expect(screen.getByPlaceholderText('Search tutors by name, bio, or subjects...')).toBeInTheDocument()
   })
 
-  it('renders all quick filter buttons', () => {
-    render(<TutorFilters {...mockProps} />)
-    expect(screen.getByText('All Prices')).toBeInTheDocument()
-    expect(screen.getByText('Under $25')).toBeInTheDocument()
-    expect(screen.getByText('$25-$50')).toBeInTheDocument()
-    expect(screen.getByText('$50-$75')).toBeInTheDocument()
-    expect(screen.getByText('$75-$100')).toBeInTheDocument()
-    expect(screen.getByText('Over $100')).toBeInTheDocument()
-  })
-
   it('shows advanced filters when expanded', () => {
     render(<TutorFilters {...mockProps} />)
     
@@ -53,6 +43,7 @@ describe('TutorFilters', () => {
     
     // Now advanced filters should be visible
     expect(screen.getByText('Subject')).toBeInTheDocument()
+    expect(screen.getByText('Price Range')).toBeInTheDocument()
     expect(screen.getByText('Rating')).toBeInTheDocument()
   })
 
@@ -65,23 +56,16 @@ describe('TutorFilters', () => {
     expect(mockProps.setSearchQuery).toHaveBeenCalledWith('math tutor')
   })
 
-  it('calls setPriceRange when quick filter buttons are clicked', () => {
+  it('calls setPriceRange when price dropdown changes', () => {
     render(<TutorFilters {...mockProps} />)
     
-    fireEvent.click(screen.getByText('Under $25'))
+    // Expand advanced filters first
+    fireEvent.click(screen.getByText('Show advanced filters'))
+    
+    const priceSelect = screen.getByLabelText('Price Range')
+    fireEvent.change(priceSelect, { target: { value: 'under-25' } })
+    
     expect(mockProps.setPriceRange).toHaveBeenCalledWith('under-25')
-    
-    fireEvent.click(screen.getByText('$25-$50'))
-    expect(mockProps.setPriceRange).toHaveBeenCalledWith('25-50')
-    
-    fireEvent.click(screen.getByText('$50-$75'))
-    expect(mockProps.setPriceRange).toHaveBeenCalledWith('50-75')
-    
-    fireEvent.click(screen.getByText('$75-$100'))
-    expect(mockProps.setPriceRange).toHaveBeenCalledWith('75-100')
-    
-    fireEvent.click(screen.getByText('Over $100'))
-    expect(mockProps.setPriceRange).toHaveBeenCalledWith('over-100')
   })
 
   it('calls setSelectedSubject when subject dropdown changes', () => {
@@ -136,14 +120,32 @@ describe('TutorFilters', () => {
     expect(subjectSelect).toHaveTextContent('Chemistry')
   })
 
-  it('highlights active price range button', () => {
+  it('renders all price range options in dropdown', () => {
+    render(<TutorFilters {...mockProps} />)
+    
+    // Expand advanced filters
+    fireEvent.click(screen.getByText('Show advanced filters'))
+    
+    const priceSelect = screen.getByLabelText('Price Range')
+    expect(priceSelect).toHaveValue('all')
+    
+    // Check that all price ranges are rendered as options
+    expect(priceSelect).toHaveTextContent('All Prices')
+    expect(priceSelect).toHaveTextContent('Under $25')
+    expect(priceSelect).toHaveTextContent('$25-$50')
+    expect(priceSelect).toHaveTextContent('$50-$75')
+    expect(priceSelect).toHaveTextContent('$75-$100')
+    expect(priceSelect).toHaveTextContent('Over $100')
+  })
+
+  it('shows correct price range value when prop is set', () => {
     render(<TutorFilters {...mockProps} priceRange="25-50" />)
     
-    const activeButton = screen.getByText('$25-$50')
-    expect(activeButton).toHaveClass('bg-primary-600', 'text-white')
+    // Expand advanced filters
+    fireEvent.click(screen.getByText('Show advanced filters'))
     
-    const inactiveButton = screen.getByText('All Prices')
-    expect(inactiveButton).toHaveClass('bg-gray-100', 'text-gray-700')
+    const priceSelect = screen.getByLabelText('Price Range')
+    expect(priceSelect).toHaveValue('25-50')
   })
 
   it('toggles advanced filters visibility', () => {
@@ -157,11 +159,15 @@ describe('TutorFilters', () => {
     // Show advanced filters
     fireEvent.click(toggleButton)
     expect(screen.getByText('Subject')).toBeInTheDocument()
+    expect(screen.getByText('Price Range')).toBeInTheDocument()
+    expect(screen.getByText('Rating')).toBeInTheDocument()
     expect(screen.getByText('Hide advanced filters')).toBeInTheDocument()
     
     // Hide advanced filters
     fireEvent.click(screen.getByText('Hide advanced filters'))
     expect(screen.queryByText('Subject')).not.toBeInTheDocument()
+    expect(screen.queryByText('Price Range')).not.toBeInTheDocument()
+    expect(screen.queryByText('Rating')).not.toBeInTheDocument()
     expect(screen.getByText('Show advanced filters')).toBeInTheDocument()
   })
 }) 
