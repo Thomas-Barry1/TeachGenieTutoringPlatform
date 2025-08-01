@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('user_type')
-      .eq('id', user.id)
+      .eq('id', user!.id)
       .single()
 
     if (profileError || profile?.user_type !== 'student') {
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       const { error: dbError } = await supabase
         .from('ai_performance_predictions')
         .insert({
-          user_id: user.id,
+          user_id: user!.id,
           subject,
           exam_type: examType,
           predicted_score: mockPrediction.predictedScore,

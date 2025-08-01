@@ -345,13 +345,13 @@ export default function ExamPredictorPage() {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-medium text-gray-900">Predicted Score</h3>
                   <span className="text-sm text-gray-500">
-                    Confidence: {prediction.confidence}%
+                    Confidence: {prediction?.confidence}%
                   </span>
                 </div>
                 <div className="bg-gray-100 rounded-lg p-4">
                   <div className="flex items-center justify-center">
                     <span className="text-4xl font-bold text-primary-600">
-                      {prediction.predictedScore}%
+                      {prediction?.predictedScore}%
                     </span>
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export default function ExamPredictorPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Key Topics to Focus On</h3>
                 <div className="space-y-2">
-                  {prediction.keyTopics.map((topic, index) => (
+                  {prediction?.keyTopics.map((topic, index) => (
                     <div key={index} className="flex items-center">
                       <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
                       <span className="text-gray-700">{topic}</span>
@@ -374,7 +374,7 @@ export default function ExamPredictorPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Areas Needing Improvement</h3>
                 <div className="space-y-2">
-                  {prediction.weakAreas.map((area, index) => (
+                  {prediction?.weakAreas.map((area, index) => (
                     <div key={index} className="flex items-center">
                       <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
                       <span className="text-gray-700">{area}</span>
@@ -387,7 +387,7 @@ export default function ExamPredictorPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Study Recommendations</h3>
                 <div className="space-y-2">
-                  {prediction.studyRecommendations.map((rec, index) => (
+                  {prediction?.studyRecommendations.map((rec, index) => (
                     <div key={index} className="flex items-start">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mr-3 mt-2"></div>
                       <span className="text-gray-700">{rec}</span>
@@ -400,7 +400,7 @@ export default function ExamPredictorPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Estimated Study Time</h3>
                 <div className="bg-blue-50 rounded-lg p-3">
-                  <span className="text-blue-700 font-medium">{prediction.estimatedStudyTime}</span>
+                  <span className="text-blue-700 font-medium">{prediction?.estimatedStudyTime}</span>
                 </div>
               </div>
 
@@ -408,7 +408,7 @@ export default function ExamPredictorPage() {
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Suggested Practice Questions</h3>
                 <div className="space-y-2">
-                  {prediction.practiceQuestions.map((question, index) => (
+                  {prediction?.practiceQuestions.map((question, index) => (
                     <div key={index} className="bg-gray-50 rounded-lg p-3">
                       <span className="text-gray-700 text-sm">{question}</span>
                     </div>
