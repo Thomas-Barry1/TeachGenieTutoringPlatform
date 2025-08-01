@@ -20,7 +20,7 @@ export default function Home() {
       
       {/* Hero section */}
       <div className="relative px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl py-16 sm:py-24 lg:py-32">
+        <div className="mx-auto max-w-4xl py-12 sm:py-16 lg:py-20">
           <div className="text-center">
             <div className="mb-8">
               <span className="inline-flex items-center rounded-full bg-gradient-to-r from-primary-100 to-secondary-100 px-4 py-2 text-sm font-medium text-primary-800 ring-1 ring-inset ring-primary-200/20">
