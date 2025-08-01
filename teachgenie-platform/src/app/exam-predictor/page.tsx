@@ -422,7 +422,7 @@ export default function ExamPredictorPage() {
                 <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No Analysis Yet</h3>
                 <p className="text-gray-600">
-                  Upload your study materials and click "Analyze Materials" to get your exam prediction.
+                  Upload your study materials and click &quot;Analyze Materials&quot; to get your exam prediction.
                 </p>
               </div>
             </div>
