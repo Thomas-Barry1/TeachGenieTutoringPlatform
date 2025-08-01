@@ -38,7 +38,7 @@ export default function Home() {
             </h1>
             
             <p className="mt-8 text-xl leading-8 text-gray-600 max-w-3xl mx-auto">
-              Connect with expert tutors for personalized learning experiences, or share your knowledge and earn while helping others succeed.
+              Connect with expert tutors for personalized learning, or share your knowledge to help others succeed.
             </p>
             
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
