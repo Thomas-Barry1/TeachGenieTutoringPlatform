@@ -25,21 +25,42 @@ export default function Home() {
             <div className="mb-8">
               <span className="inline-flex items-center rounded-full bg-gradient-to-r from-primary-100 to-secondary-100 px-4 py-2 text-sm font-medium text-primary-800 ring-1 ring-inset ring-primary-200/20">
                 <StarIcon className="w-4 h-4 mr-2" />
-                Connect with expert tutors and students
+                Trusted by students worldwide
               </span>
             </div>
             
             <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl lg:text-8xl">
               <span className="bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                Learn & Teach
+                Learn & Grow
               </span>
               <br />
               <span className="text-gray-900">with Confidence</span>
             </h1>
             
             <p className="mt-8 text-xl leading-8 text-gray-600 max-w-3xl mx-auto">
-              Connect with expert tutors for personalized learning, or share your knowledge to help others succeed.
+              Connect with expert tutors for personalized learning experiences. Get the help you need to excel in any subject.
             </p>
+            
+            <div className="mt-8 flex flex-wrap justify-center items-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center">
+                <div className="flex text-yellow-400 mr-2">
+                  <StarIcon className="w-4 h-4 fill-current" />
+                  <StarIcon className="w-4 h-4 fill-current" />
+                  <StarIcon className="w-4 h-4 fill-current" />
+                  <StarIcon className="w-4 h-4 fill-current" />
+                  <StarIcon className="w-4 h-4 fill-current" />
+                </div>
+                <span>Verified tutors</span>
+              </div>
+              <div className="flex items-center">
+                <ShieldCheckIcon className="w-4 h-4 text-green-500 mr-2" />
+                <span>Secure platform</span>
+              </div>
+              <div className="flex items-center">
+                <ClockIcon className="w-4 h-4 text-blue-500 mr-2" />
+                <span>Flexible scheduling</span>
+              </div>
+            </div>
             
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6">
               <Link
