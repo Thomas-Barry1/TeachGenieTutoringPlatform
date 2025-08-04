@@ -13,7 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function RegisterPage() {
-  const { signUp, signInWithGoogle, signInWithFacebook, signInWithApple } = useAuth()
+  const { signUp, signInWithGoogle } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [userType, setUserType] = useState<'student' | 'tutor'>('student')
@@ -51,7 +51,7 @@ export default function RegisterPage() {
     }
   }
 
-  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
+  const handleSocialLogin = async (provider: 'google') => {
     setIsLoading(true)
     setError('')
     
@@ -60,12 +60,12 @@ export default function RegisterPage() {
         case 'google':
           await signInWithGoogle()
           break
-        case 'facebook':
-          await signInWithFacebook()
-          break
-        case 'apple':
-          await signInWithApple()
-          break
+        // case 'facebook':
+        //   await signInWithFacebook()
+        //   break
+        // case 'apple':
+        //   await signInWithApple()
+        //   break
       }
     } catch (error) {
       console.error(`${provider} login error:`, error)
@@ -106,6 +106,7 @@ export default function RegisterPage() {
                 Continue with Google
               </button>
 
+              {/* Facebook and Apple OAuth temporarily disabled
               <button
                 onClick={() => handleSocialLogin('facebook')}
                 disabled={isLoading}
@@ -127,6 +128,7 @@ export default function RegisterPage() {
                 </svg>
                 Continue with Apple
               </button>
+              */}
             </div>
 
             <div className="relative mb-8">
@@ -306,66 +308,92 @@ export default function RegisterPage() {
         </div>
 
         {/* Right side - Trust indicators and benefits */}
-        <div className="hidden lg:flex lg:w-1/2 bg-white p-8">
-          <div className="max-w-md mx-auto">
+        <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-secondary-50 to-secondary-100 p-12">
+          <div className="max-w-md mx-auto flex flex-col justify-center">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Reach your goals faster with personalized help
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Why choose TeachGenie
               </h2>
-              <p className="text-gray-600 mb-6">
-                Join thousands of students who have found success with expert tutors on TeachGenie.
+              <p className="text-gray-600">
+                Join other successful students
               </p>
             </div>
 
             <div className="space-y-6">
               <div className="flex items-start">
-                <CheckCircleIcon className="w-6 h-6 text-green-500 mr-3 mt-0.5" />
+                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center mr-4 mt-1">
+                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                  </svg>
+                </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Free to Sign Up</h3>
-                  <p className="text-sm text-gray-600">Create your account for free and only pay for the sessions you book.</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Free to Sign Up</h3>
+                  <p className="text-sm text-gray-600">Create your account for free and only pay for the sessions you book</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <CheckCircleIcon className="w-6 h-6 text-green-500 mr-3 mt-0.5" />
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-4 mt-1">
+                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Verified Expert Tutors</h3>
-                  <p className="text-sm text-gray-600">All tutors are verified and reviewed by our community.</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Verified Expert Tutors</h3>
+                  <p className="text-sm text-gray-600">All tutors are verified and reviewed by our community</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <CheckCircleIcon className="w-6 h-6 text-green-500 mr-3 mt-0.5" />
+                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-4 mt-1">
+                  <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Flexible Scheduling</h3>
-                  <p className="text-sm text-gray-600">Book sessions that fit your schedule, anytime, anywhere.</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Flexible Scheduling</h3>
+                  <p className="text-sm text-gray-600">Book sessions that fit your schedule, anytime, anywhere</p>
                 </div>
               </div>
 
               <div className="flex items-start">
-                <CheckCircleIcon className="w-6 h-6 text-green-500 mr-3 mt-0.5" />
+                <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center mr-4 mt-1">
+                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Secure Platform</h3>
-                  <p className="text-sm text-gray-600">Your data and payments are protected with bank-level security.</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Secure Platform</h3>
+                  <p className="text-sm text-gray-600">Your data and payments are protected with bank-level security</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-              <div className="flex items-center mb-4">
+            <div className="mt-12 p-6 bg-white rounded-xl shadow-sm border border-gray-100">
+              <div className="flex items-center mb-3">
                 <div className="flex text-yellow-400">
-                  <StarIcon className="w-5 h-5 fill-current" />
-                  <StarIcon className="w-5 h-5 fill-current" />
-                  <StarIcon className="w-5 h-5 fill-current" />
-                  <StarIcon className="w-5 h-5 fill-current" />
-                  <StarIcon className="w-5 h-5 fill-current" />
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
                 </div>
-                <span className="ml-2 text-sm text-gray-600">Verified tutor</span>
+                <span className="ml-2 text-sm font-medium text-gray-700">Verified tutor</span>
               </div>
-              <p className="text-gray-700 italic">
+              <p className="text-gray-700 text-sm leading-relaxed">
                 "I found the perfect tutor for my math struggles. The sessions were incredibly helpful and I improved my grades significantly!"
               </p>
-              <p className="text-sm text-gray-600 mt-2">- Sarah, Student</p>
+              {/* <p className="text-sm text-gray-600 mt-2 font-medium">- Sarah, Student</p> */}
             </div>
           </div>
         </div>

@@ -15,8 +15,8 @@ type AuthContextType = {
     userType: 'student' | 'tutor'
   }) => Promise<void>
   signInWithGoogle: () => Promise<void>
-  signInWithFacebook: () => Promise<void>
-  signInWithApple: () => Promise<void>
+  // signInWithFacebook: () => Promise<void>
+  // signInWithApple: () => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -142,33 +142,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signInWithFacebook = async () => {
-    console.log('AuthProvider: Signing in with Facebook')
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'facebook',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
-    if (error) {
-      console.error('Facebook sign in error:', error)
-      throw error
-    }
-  }
+  // const signInWithFacebook = async () => {
+  //   console.log('AuthProvider: Signing in with Facebook')
+  //   const { data, error } = await supabase.auth.signInWithOAuth({
+  //     provider: 'facebook',
+  //     options: {
+  //       redirectTo: `${window.location.origin}/auth/callback`
+  //     }
+  //   })
+  //   if (error) {
+  //     console.error('Facebook sign in error:', error)
+  //     throw error
+  //   }
+  // }
 
-  const signInWithApple = async () => {
-    console.log('AuthProvider: Signing in with Apple')
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
-    })
-    if (error) {
-      console.error('Apple sign in error:', error)
-      throw error
-    }
-  }
+  // const signInWithApple = async () => {
+  //   console.log('AuthProvider: Signing in with Apple')
+  //   const { data, error } = await supabase.auth.signInWithOAuth({
+  //     provider: 'apple',
+  //     options: {
+  //       redirectTo: `${window.location.origin}/auth/callback`
+  //     }
+  //   })
+  //   if (error) {
+  //     console.error('Apple sign in error:', error)
+  //     throw error
+  //   }
+  // }
 
   const signOut = async () => {
     console.log('AuthProvider: Signing out user')
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   console.log('AuthProvider: Current state - user:', user ? 'exists' : 'none', 'loading:', loading)
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signInWithFacebook, signInWithApple, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signInWithGoogle, signOut }}>
       {children}
     </AuthContext.Provider>
   )
