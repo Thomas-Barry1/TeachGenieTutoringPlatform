@@ -15,12 +15,12 @@ function AuthCallbackPage() {
       try {
         const supabase = createClient()
         
-        // Get the session after email verification
+        // Get the session after OAuth or email verification
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) {
           console.error('Session error:', sessionError)
-          setError('Failed to verify email. Please try again.')
+          setError('Authentication failed. Please try again.')
           setTimeout(() => {
             window.location.replace('/auth/login')
           }, 1000)
@@ -29,7 +29,7 @@ function AuthCallbackPage() {
         }
 
         if (!session?.user) {
-          setError('No user session found. Please try signing up again.')
+          setError('No user session found. Please try signing in again.')
           setTimeout(() => {
             window.location.replace('/auth/login')
           }, 1000)
@@ -37,69 +37,113 @@ function AuthCallbackPage() {
           return
         }
 
-        console.log('User verified, creating profile...')
+        console.log('User authenticated, checking profile...')
 
-        // Get user metadata from auth
-        let userMetadata = session.user.user_metadata
-        let { first_name, last_name, user_type } = userMetadata
-        // If missing, try to get from localStorage
-        if ((!first_name || !last_name || !user_type) && typeof window !== 'undefined') {
-          const regInfo = localStorage.getItem('registrationInfo')
-          if (regInfo) {
-            const parsed = JSON.parse(regInfo)
-            first_name = first_name || parsed.firstName
-            last_name = last_name || parsed.lastName
-            user_type = user_type || parsed.userType
-          }
-        }
-        if (!first_name || !last_name || !user_type) {
-          setError('Missing user information. Please try signing up again.')
-          setLoading(false)
-          return
-        }
-
-        // Create profile
-        const { error: profileError } = await supabase
+        // Check if user already has a profile
+        const { data: existingProfile, error: profileCheckError } = await supabase
           .from('profiles')
-          .insert({
-            id: session.user.id,
-            first_name,
-            last_name,
-            user_type,
-            email: session.user.email,
-          })
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
 
-        if (profileError) {
-          console.error('Profile creation error:', profileError)
-          setError('Failed to create profile. Please contact support.')
+        if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+          console.error('Profile check error:', profileCheckError)
+          setError('Failed to check profile. Please try again.')
           setLoading(false)
           return
         }
 
-        console.log('Profile created successfully')
+        // If profile doesn't exist, this is a new user
+        if (!existingProfile) {
+          console.log('No existing profile, creating new profile...')
 
-        // If user is a tutor, create tutor profile
-        if (user_type === 'tutor') {
-          const { error: tutorError } = await supabase
-            .from('tutor_profiles')
+          // Get user metadata from auth
+          let userMetadata = session.user.user_metadata
+          let { first_name, last_name, user_type } = userMetadata
+          
+          // For Google OAuth, get name from Google profile
+          if (session.user.app_metadata?.provider === 'google') {
+            first_name = first_name || userMetadata?.full_name?.split(' ')[0] || userMetadata?.given_name
+            last_name = last_name || userMetadata?.full_name?.split(' ').slice(1).join(' ') || userMetadata?.family_name
+            
+            // For Google OAuth, last name is optional - use first name if no last name
+            // if (!last_name && first_name) {
+            //   last_name = first_name // Use first name as last name if no last name provided
+            // }
+          }
+          
+          // If missing, try to get from localStorage
+          if ((!first_name || !last_name || !user_type) && typeof window !== 'undefined') {
+            const regInfo = localStorage.getItem('registrationInfo')
+            if (regInfo) {
+              const parsed = JSON.parse(regInfo)
+              first_name = first_name || parsed.firstName
+              last_name = last_name || parsed.lastName
+              user_type = user_type || parsed.userType
+            }
+          }
+          
+          // For Google OAuth, only require first_name and user_type
+          // For email registration, require both first_name and last_name
+          const isGoogleOAuth = session.user.app_metadata?.provider === 'google'
+          const hasRequiredInfo = isGoogleOAuth 
+            ? (first_name && user_type) 
+            : (first_name && last_name && user_type)
+          
+          if (!hasRequiredInfo) {
+            console.log('Missing user information, redirecting to registration')
+            // Clean up any existing session
+            await supabase.auth.signOut()
+            // Redirect to registration page with a message
+            router.push('/auth/register?error=missing_info')
+            return
+          }
+
+          // Create profile
+          const { error: profileError } = await supabase
+            .from('profiles')
             .insert({
               id: session.user.id,
-              is_verified: false,
+              first_name,
+              last_name,
+              user_type,
+              email: session.user.email,
             })
 
-          if (tutorError) {
-            console.error('Tutor profile creation error:', tutorError)
-            setError('Failed to create tutor profile. Please contact support.')
+          if (profileError) {
+            console.error('Profile creation error:', profileError)
+            setError('Failed to create profile. Please contact support.')
             setLoading(false)
             return
           }
 
-          console.log('Tutor profile created successfully')
-        }
+          console.log('Profile created successfully')
 
-        // Clean up registration info
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('registrationInfo')
+          // If user is a tutor, create tutor profile
+          if (user_type === 'tutor') {
+            const { error: tutorError } = await supabase
+              .from('tutor_profiles')
+              .insert({
+                id: session.user.id,
+                is_verified: false,
+              })
+
+            if (tutorError) {
+              console.error('Tutor profile creation error:', tutorError)
+              setError('Failed to create tutor profile. Please contact support.')
+              setLoading(false)
+              return
+            }
+
+            console.log('Tutor profile created successfully')
+          }
+
+          // Clean up registration info
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('registrationInfo')
+          }
+        } else {
+          console.log('Existing profile found, user is logging in')
         }
 
         // Redirect to next param or dashboard
@@ -118,7 +162,7 @@ function AuthCallbackPage() {
     }
 
     handleAuthCallback()
-  }, [router])
+  }, [router, searchParams])
 
   if (loading) {
     return (
@@ -142,7 +186,7 @@ function AuthCallbackPage() {
                 </svg>
               </div>
               <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                Email Verified!
+                Authentication Successful!
               </h2>
               <p className="mt-2 text-sm text-gray-600">
                 Setting up your account...
@@ -179,17 +223,23 @@ function AuthCallbackPage() {
                 </svg>
               </div>
               <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                Verification Failed
+                Account Setup Required
               </h2>
               <p className="mt-2 text-sm text-gray-600">
                 {error}
               </p>
-              <div className="mt-6">
+              <div className="mt-6 space-y-3">
                 <button
-                  onClick={() => router.push('/auth/login')}
+                  onClick={() => router.push('/auth/register')}
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  Go to Sign In
+                  Complete Registration
+                </button>
+                <button
+                  onClick={() => router.push('/auth/login')}
+                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Back to Sign In
                 </button>
               </div>
             </div>

@@ -203,7 +203,7 @@ export default function LoginPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Learning Dashboard</h3>
+                  <h3 className="font-semibold text-gray-900 mb-1">Dashboard</h3>
                   <p className="text-sm text-gray-600">Track your progress and view upcoming sessions</p>
                 </div>
               </div>
@@ -215,8 +215,8 @@ export default function LoginPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-1">Connect with Tutors</h3>
-                  <p className="text-sm text-gray-600">Message and schedule sessions with your tutors</p>
+                  <h3 className="font-semibold text-gray-900 mb-1">Connect with Tutors or Students</h3>
+                  <p className="text-sm text-gray-600">Message and schedule sessions</p>
                 </div>
               </div>
 
@@ -228,7 +228,7 @@ export default function LoginPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-1">Track Progress</h3>
-                  <p className="text-sm text-gray-600">Monitor your learning achievements and goals</p>
+                  <p className="text-sm text-gray-600">Monitor learning achievements and goals</p>
                 </div>
               </div>
 

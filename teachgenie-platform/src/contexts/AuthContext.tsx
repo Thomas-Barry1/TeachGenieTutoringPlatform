@@ -130,10 +130,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     console.log('AuthProvider: Signing in with Google')
+    
+    // Get user type from localStorage if available
+    let userType = 'student' // default
+    if (typeof window !== 'undefined') {
+      const regInfo = localStorage.getItem('registrationInfo')
+      if (regInfo) {
+        const parsed = JSON.parse(regInfo)
+        userType = parsed.userType || 'student'
+      }
+    }
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        }
       }
     })
     if (error) {
