@@ -267,7 +267,7 @@ export default function LoginPage() {
                 <span className="ml-2 text-sm font-medium text-gray-700">Trusted by students</span>
               </div>
               <p className="text-gray-700 text-sm leading-relaxed">
-                "The tutors here are amazing! I've improved my grades significantly and feel much more confident in my studies."
+                &quot;The tutors here are amazing! I&apos;ve improved my grades significantly and feel much more confident in my studies.&quot;
               </p>
             </div>
           </div>

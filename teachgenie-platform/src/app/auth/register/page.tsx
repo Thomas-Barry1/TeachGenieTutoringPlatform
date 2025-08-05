@@ -410,7 +410,7 @@ export default function RegisterPage() {
                 <span className="ml-2 text-sm font-medium text-gray-700">Verified tutor</span>
               </div>
               <p className="text-gray-700 text-sm leading-relaxed">
-                "I found the perfect tutor for my math struggles. The sessions were incredibly helpful and I improved my grades significantly!"
+                &quot;I found the perfect tutor for my math struggles. The sessions were incredibly helpful and I improved my grades significantly!&quot;
               </p>
               {/* <p className="text-sm text-gray-600 mt-2 font-medium">- Sarah, Student</p> */}
             </div>
