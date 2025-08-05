@@ -59,6 +59,7 @@ function AuthCallbackPage() {
 
           // Get user metadata from auth
           let userMetadata = session.user.user_metadata
+          console.log('userMetadata: ', userMetadata)
           let { first_name, last_name, user_type } = userMetadata
           
           // For Google OAuth, get name from Google profile
