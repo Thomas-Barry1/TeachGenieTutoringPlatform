@@ -46,14 +46,7 @@ function AuthCallbackPage() {
           .eq('id', session.user.id)
           .single()
 
-        if (profileCheckError && profileCheckError.code !== 'PGRST116') {
-          console.error('Profile check error:', profileCheckError)
-          setError('Failed to check profile. Please try again.')
-          setLoading(false)
-          return
-        }
-
-        // If profile doesn't exist, this is a new user
+        // If profile doesn't exist (PGRST116 = no rows returned) or there's an error, create one
         if (!existingProfile) {
           console.log('No existing profile, creating new profile...')
 
@@ -66,11 +59,6 @@ function AuthCallbackPage() {
           if (session.user.app_metadata?.provider === 'google') {
             first_name = first_name || userMetadata?.full_name?.split(' ')[0] || userMetadata?.given_name
             last_name = last_name || userMetadata?.full_name?.split(' ').slice(1).join(' ') || userMetadata?.family_name
-            
-            // For Google OAuth, last name is optional - use first name if no last name
-            // if (!last_name && first_name) {
-            //   last_name = first_name // Use first name as last name if no last name provided
-            // }
           }
           
           // If missing, try to get from localStorage
