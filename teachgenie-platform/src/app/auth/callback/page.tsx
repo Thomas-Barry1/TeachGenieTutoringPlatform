@@ -103,7 +103,7 @@ function AuthCallbackPage() {
 
           if (profileError) {
             console.error('Profile creation error:', profileError)
-            setError('Failed to create profile. Please contact support.')
+            setError('Failed to create profile. Sign out and try again. If the problem persists, please contact support.')
             setLoading(false)
             return
           }
