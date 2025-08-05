@@ -408,7 +408,7 @@ export default function ConversationPage() {
                       Reply to continue your conversation and keep your learning journey moving forward.
                     </p>
                     
-                    <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.vercel.app'}/inbox/${id}" class="cta-button">
+                    <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.io'}/inbox/${id}" class="cta-button">
                       View Message →
                     </a>
                     
@@ -419,8 +419,8 @@ export default function ConversationPage() {
                   <div class="footer">
                     <p>© 2025 TeachGenie. All rights reserved.</p>
                     <p>
-                      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.vercel.app'}/PRIVACY">Privacy Policy</a> • 
-                      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.vercel.app'}/TERMS">Terms of Service</a>
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.io'}/PRIVACY">Privacy Policy</a> • 
+                      <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://teachgenie.io'}/TERMS">Terms of Service</a>
                     </p>
                   </div>
                 </div>
