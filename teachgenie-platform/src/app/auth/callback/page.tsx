@@ -100,6 +100,8 @@ function AuthCallbackPage() {
             return
           }
 
+          console.log("User id: ", session.user.id)
+
           // Create profile
           const { error: profileError } = await supabase
             .from('profiles')
