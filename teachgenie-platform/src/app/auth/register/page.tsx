@@ -101,8 +101,8 @@ function RegisterPageContent() {
         <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-8">
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome to TeachGenie
+              <h1 className="leading-relaxed text-3xl font-bold text-gray-900 mb-2">
+                Welcome to TeachGenie!
               </h1>
               <p className="text-gray-600">
                 Create a free account to connect with expert tutors and start learning.
