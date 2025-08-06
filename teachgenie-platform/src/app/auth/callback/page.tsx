@@ -32,7 +32,7 @@ function AuthCallbackPage() {
           setError('No user session found. Please try signing in again.')
           setTimeout(() => {
             window.location.replace('/auth/login')
-          }, 2000)
+          }, 3000)
           setLoading(false)
           return
         }
