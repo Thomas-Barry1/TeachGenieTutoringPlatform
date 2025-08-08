@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createServiceClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -12,7 +12,8 @@ export async function GET(request: Request) {
   }
 
   try {
-    const supabase = await createClient()
+    // Use service role client to bypass RLS for system-managed notifications
+    const supabase = createServiceClient()
 
     // 1. Send tutor response reminders (tutors who haven't responded in >24 hours)
     await sendTutorResponseReminders(supabase)
