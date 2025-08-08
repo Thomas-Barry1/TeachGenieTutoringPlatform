@@ -477,6 +477,17 @@ CREATE POLICY "Send chat messages"
     )
   );
 
+CREATE POLICY "Update own messages"
+  ON public.chat_messages FOR UPDATE
+  USING (
+    auth.uid() = sender_id OR
+    EXISTS (
+      SELECT 1 FROM public.chat_participants
+      WHERE chat_participants.chat_room_id = chat_messages.chat_room_id
+      AND chat_participants.user_id = auth.uid()
+    )
+  );
+
 -- Message notifications policies
 CREATE POLICY "View own notifications"
   ON public.message_notifications FOR SELECT

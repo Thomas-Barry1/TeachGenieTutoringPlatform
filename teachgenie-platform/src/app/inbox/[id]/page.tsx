@@ -213,13 +213,15 @@ export default function ConversationPage() {
         );
 
         if (unreadMessages.length) {
-          const { error: updateError } = await supabase
+          const { data: updateData, error: updateError } = await supabase
             .from('chat_messages')
             .update({ is_read: true })
             .in(
               'id',
               unreadMessages.map(m => m.id)
             );
+
+          console.log('Update data: ', updateData);
 
           if (updateError) {
             console.error('Error marking messages as read:', updateError);

@@ -240,6 +240,18 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 - **Rate Limiting**: Prevents spam by checking message frequency
 - **Error Handling**: Graceful fallback for email delivery failures
 
+### Scheduled Notifications (Cron)
+- **Endpoint**: `GET /api/cron/session-notifications`
+- **Schedule**: Configured in `vercel.json` to run daily (`0 9 * * *`)
+- **Security**: Requires `Authorization: Bearer ${CRON_SECRET}` header. Add `CRON_SECRET` to Vercel Project Environment Variables.
+- **Email Types**:
+  - Tutor response reminder (tutor only, if no reply to student in >24h; max once per 24h per tutor)
+  - 24-hour session reminders (student + tutor)
+    - Tutor email also includes AI tool suggestions and teaching tips if tutor is verified
+- **Database**: `public.session_notifications` tracks sent notifications to avoid duplicates
+  - Columns: `id`, `session_id`, `user_id`, `notification_type`, `sent_at`, `delivery_status`
+  - RLS: service role can manage all; users can SELECT their own
+
 ### Use Cases
 1. **Message Notifications**: Email alerts for new chat messages
 2. **Session Updates**: Reminders and confirmations for tutoring sessions
