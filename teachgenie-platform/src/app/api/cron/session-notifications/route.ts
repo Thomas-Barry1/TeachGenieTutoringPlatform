@@ -34,6 +34,7 @@ export async function GET(request: Request) {
 }
 
 async function sendTutorResponseReminders(supabase: any) {
+  console.log('Sending tutor response reminders')
   const oneDayAgo = new Date()
   oneDayAgo.setDate(oneDayAgo.getDate() - 1)
 
@@ -58,6 +59,8 @@ async function sendTutorResponseReminders(supabase: any) {
     .lt('created_at', oneDayAgo.toISOString())
     .eq('is_read', false)
 
+  console.log('Unresponded messages: ', unrespondedMessages)
+
   if (error) {
     console.error('Error fetching unresponded messages:', error)
     return
@@ -81,6 +84,8 @@ async function sendTutorResponseReminders(supabase: any) {
       tutorReminders.get(tutor.profiles.id).students.add(student.profiles.first_name)
     }
   }
+
+  console.log('Tutor reminders: ', tutorReminders)
 
   // Send reminder emails to tutors (only if we haven't sent one in the last 24 hours)
   for (const [tutorId, data] of tutorReminders) {
@@ -127,6 +132,7 @@ async function sendTutorResponseReminders(supabase: any) {
 }
 
 async function send24HourSessionReminders(supabase: any) {
+  console.log('Sending 24-hour session reminders')
   const now = new Date()
   const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000)
   const thirtySixHoursFromNow = new Date(now.getTime() + 36 * 60 * 60 * 1000)
@@ -156,6 +162,8 @@ async function send24HourSessionReminders(supabase: any) {
     .gte('start_time', twentyFourHoursFromNow.toISOString())
     .lt('start_time', thirtySixHoursFromNow.toISOString())
     .eq('status', 'scheduled')
+
+  console.log('24-hour sessions: ', sessions)
 
   if (error) {
     console.error('Error fetching 24-hour sessions:', error)
