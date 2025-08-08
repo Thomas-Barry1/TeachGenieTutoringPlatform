@@ -13,8 +13,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
+    const supabase = await createClient()
 
     // 1. Send tutor response reminders (tutors who haven't responded in >24 hours)
     await sendTutorResponseReminders(supabase)
@@ -90,8 +89,22 @@ async function sendTutorResponseReminders(supabase: any) {
     }
   }
 
-  // Send reminder emails to tutors
+  // Send reminder emails to tutors (only if we haven't sent one in the last 24 hours)
   for (const [tutorId, data] of tutorReminders) {
+    // Check if we've already sent a reminder to this tutor in the last 24 hours
+    const { data: existingNotification } = await supabase
+      .from('session_notifications')
+      .select('*')
+      .eq('user_id', tutorId)
+      .eq('notification_type', 'tutor_response_reminder')
+      .gte('sent_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .single()
+
+    if (existingNotification) {
+      console.log(`Skipping reminder for tutor ${tutorId} - already sent within 24 hours`)
+      continue
+    }
+
     const studentNames = Array.from(data.students).join(', ')
     
     await resend.emails.send({
@@ -108,6 +121,15 @@ async function sendTutorResponseReminders(supabase: any) {
         </div>
       `
     })
+
+    // Record that we sent this notification
+    await supabase
+      .from('session_notifications')
+      .insert({
+        user_id: tutorId,
+        notification_type: 'tutor_response_reminder',
+        delivery_status: 'sent'
+      })
   }
 }
 
@@ -147,6 +169,18 @@ async function send24HourSessionReminders(supabase: any) {
   }
 
   for (const session of sessions || []) {
+    // Check if we've already sent 24-hour reminders for this session
+    const { data: existingNotifications } = await supabase
+      .from('session_notifications')
+      .select('*')
+      .eq('session_id', session.id)
+      .eq('notification_type', 'reminder_24h')
+
+    if (existingNotifications && existingNotifications.length > 0) {
+      console.log(`Skipping 24-hour reminder for session ${session.id} - already sent`)
+      continue
+    }
+
     const sessionDate = new Date(session.start_time)
     const formattedDate = sessionDate.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -207,6 +241,24 @@ async function send24HourSessionReminders(supabase: any) {
         </div>
       `
     })
+
+    // Record notifications for both tutor and student
+    await supabase
+      .from('session_notifications')
+      .insert([
+        {
+          session_id: session.id,
+          user_id: session.tutor.profiles.id,
+          notification_type: 'reminder_24h',
+          delivery_status: 'sent'
+        },
+        {
+          session_id: session.id,
+          user_id: session.student.id,
+          notification_type: 'reminder_24h',
+          delivery_status: 'sent'
+        }
+      ])
   }
 }
 
@@ -246,6 +298,18 @@ async function send1HourSessionReminders(supabase: any) {
   }
 
   for (const session of sessions || []) {
+    // Check if we've already sent 1-hour reminders for this session
+    const { data: existingNotifications } = await supabase
+      .from('session_notifications')
+      .select('*')
+      .eq('session_id', session.id)
+      .eq('notification_type', 'reminder_1h')
+
+    if (existingNotifications && existingNotifications.length > 0) {
+      console.log(`Skipping 1-hour reminder for session ${session.id} - already sent`)
+      continue
+    }
+
     const sessionDate = new Date(session.start_time)
     const formattedTime = sessionDate.toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -296,6 +360,24 @@ async function send1HourSessionReminders(supabase: any) {
         </div>
       `
     })
+
+    // Record notifications for both tutor and student
+    await supabase
+      .from('session_notifications')
+      .insert([
+        {
+          session_id: session.id,
+          user_id: session.tutor.profiles.id,
+          notification_type: 'reminder_1h',
+          delivery_status: 'sent'
+        },
+        {
+          session_id: session.id,
+          user_id: session.student.id,
+          notification_type: 'reminder_1h',
+          delivery_status: 'sent'
+        }
+      ])
   }
 }
 
@@ -336,6 +418,19 @@ async function sendTutorToolSuggestions(supabase: any) {
   }
 
   for (const session of sessions || []) {
+    // Check if we've already sent tool suggestions for this session
+    const { data: existingNotification } = await supabase
+      .from('session_notifications')
+      .select('*')
+      .eq('session_id', session.id)
+      .eq('notification_type', 'tutor_tools')
+      .single()
+
+    if (existingNotification) {
+      console.log(`Skipping tool suggestions for session ${session.id} - already sent`)
+      continue
+    }
+
     const sessionDate = new Date(session.start_time)
     const formattedDate = sessionDate.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -392,5 +487,15 @@ async function sendTutorToolSuggestions(supabase: any) {
         </div>
       `
     })
+
+    // Record the tool suggestion notification
+    await supabase
+      .from('session_notifications')
+      .insert({
+        session_id: session.id,
+        user_id: session.tutor.profiles.id,
+        notification_type: 'tutor_tools',
+        delivery_status: 'sent'
+      })
   }
 } 

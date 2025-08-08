@@ -121,6 +121,17 @@ CREATE TABLE public.message_notifications (
   PRIMARY KEY (id)
 );
 
+-- Add notification history table
+CREATE TABLE public.session_notifications (
+  id UUID DEFAULT uuid_generate_v4(),
+  session_id UUID REFERENCES public.sessions,
+  user_id UUID REFERENCES public.profiles,
+  notification_type TEXT NOT NULL CHECK (notification_type IN ('reminder_24h', 'reminder_1h', 'reminder_15min', 'tutor_response_reminder', 'tutor_tools', 'cancellation', 'update')),
+  sent_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  delivery_status TEXT DEFAULT 'sent' CHECK (delivery_status IN ('sent', 'delivered', 'failed')),
+  PRIMARY KEY (id)
+);
+
 -- External reviews (from other platforms like Google, Yelp, Wyzant)
 CREATE TABLE public.external_reviews (
   id UUID DEFAULT uuid_generate_v4(),
@@ -153,6 +164,9 @@ CREATE INDEX IF NOT EXISTS idx_session_payments_stripe_payment_intent_id ON publ
 CREATE INDEX IF NOT EXISTS idx_external_reviews_tutor_id ON public.external_reviews(tutor_id);
 CREATE INDEX IF NOT EXISTS idx_external_reviews_source_platform ON public.external_reviews(source_platform);
 CREATE INDEX IF NOT EXISTS idx_external_reviews_created_at ON public.external_reviews(created_at);
+CREATE INDEX IF NOT EXISTS idx_session_notifications_session_id ON public.session_notifications(session_id);
+CREATE INDEX IF NOT EXISTS idx_session_notifications_user_id ON public.session_notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_session_notifications_sent_at ON public.session_notifications(sent_at);
 
 -- Row Level Security (RLS) Policies
 
@@ -169,6 +183,7 @@ ALTER TABLE public.chat_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.message_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.external_reviews ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.session_notifications ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies by table
 -- Profiles policies
@@ -540,4 +555,13 @@ CREATE POLICY "Service role can select any session payment"
 
 CREATE POLICY "Service role can update any session payment"
   ON public.session_payments FOR UPDATE
-  USING (auth.role() = 'service_role'); 
+  USING (auth.role() = 'service_role');
+
+-- Session notifications policies
+CREATE POLICY "Service role can manage session notifications"
+  ON public.session_notifications FOR ALL
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "Users can view their own notifications"
+  ON public.session_notifications FOR SELECT
+  USING (auth.uid() = user_id); 
