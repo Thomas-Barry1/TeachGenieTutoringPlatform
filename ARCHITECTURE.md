@@ -376,6 +376,10 @@ const isVerifiedTutor = isTutor && tutorProfile?.is_verified
    - Verify user roles in middleware
    - Use `credentials: 'include'` for API calls requiring authentication
    - Ensure proper cookie management with Next.js 14+ API
+   - **OAuth Navigation Issue**: After login, navigation may not work correctly (Messages/Inbox links stay on dashboard)
+     - **Cause**: OAuth callback redirects using Next.js router, but navigation state doesn't refresh properly
+     - **Solution**: Use `window.location.replace('/dashboard')` instead of `router.push('/dashboard')` in auth callback
+     - **Why**: Forces full page reload ensuring proper auth state initialization and component re-rendering
 
 2. **Database**
    - Use proper foreign key relationships
