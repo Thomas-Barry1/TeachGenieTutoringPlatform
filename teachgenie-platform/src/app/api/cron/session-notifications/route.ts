@@ -107,7 +107,7 @@ async function sendTutorResponseReminders(supabase: any) {
     const studentNames = Array.from(data.students).join(', ')
     
     await resend.emails.send({
-      from: 'TeachGenie <notifications@teachgenie.io>',
+      from: 'TeachGenie <noreply@teachgenie.io>',
       to: data.tutor.email,
       subject: 'You have unread messages from students',
       html: `
@@ -115,7 +115,7 @@ async function sendTutorResponseReminders(supabase: any) {
           <h2 style="color: #2563eb;">Message Reminder</h2>
           <p>Hi ${data.tutor.first_name},</p>
           <p>You have unread messages from ${studentNames} that are over a day old. Responding can help maintain good communication with your students.</p>
-          <p>Log in to your TeachGenie dashboard to view and respond to these messages.</p>
+          <p><a href="https://teachgenie.io" style="color: #2563eb;">Log in to your TeachGenie dashboard</a> to view and respond to these messages.</p>
           <p>Best regards,<br>The TeachGenie Team</p>
         </div>
       `
@@ -212,7 +212,7 @@ async function send24HourSessionReminders(supabase: any) {
           <p><strong>Duration:</strong> ${Math.round((new Date(session.end_time).getTime() - sessionDate.getTime()) / (1000 * 60))} minutes</p>
           <p><strong>Rate:</strong> $${session.price}</p>
         </div>
-        <p>Please prepare your lesson materials and ensure you're ready for the session.</p>
+        <p><a href="https://teachgenie.io" style="color: #2563eb;">Visit TeachGenie</a> to manage your sessions and communicate with your student.</p>
         ${isVerifiedTutor ? `
         <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #059669;">
           <h3 style="color: #059669; margin-top: 0;">AI-Powered Teaching Tools</h3>
@@ -242,7 +242,7 @@ async function send24HourSessionReminders(supabase: any) {
     `
 
     await resend.emails.send({
-      from: 'TeachGenie <notifications@teachgenie.io>',
+      from: 'TeachGenie <noreply@teachgenie.io>',
       to: session.tutor.profiles.email,
       subject: isVerifiedTutor ? `Teaching Tools & Session Reminder: ${session.subject.name} tomorrow` : `Session Reminder: ${session.subject.name} tomorrow`,
       html: tutorEmailContent
@@ -250,7 +250,7 @@ async function send24HourSessionReminders(supabase: any) {
 
     // Send to student
     await resend.emails.send({
-      from: 'TeachGenie <notifications@teachgenie.io>',
+      from: 'TeachGenie <noreply@teachgenie.io>',
       to: session.student.email,
       subject: `Session Reminder: ${session.subject.name} tomorrow`,
       html: `
@@ -258,7 +258,7 @@ async function send24HourSessionReminders(supabase: any) {
           <h2 style="color: #2563eb;">Session Reminder</h2>
           <p>Hi ${session.student.first_name},</p>
           <p>You have a tutoring session tomorrow:</p>
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <div style="background: #f3f6f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Tutor:</strong> ${session.tutor.profiles.first_name} ${session.tutor.profiles.last_name}</p>
             <p><strong>Subject:</strong> ${session.subject.name}</p>
             <p><strong>Date:</strong> ${formattedDate}</p>
@@ -267,6 +267,7 @@ async function send24HourSessionReminders(supabase: any) {
             <p><strong>Cost:</strong> $${session.price}</p>
           </div>
           <p>Please prepare any questions or materials you'd like to discuss during the session.</p>
+          <p><a href="https://teachgenie.io" style="color: #2563eb;">Visit TeachGenie</a> to manage your sessions and communicate with your tutor.</p>
           <p>Best regards,<br>The TeachGenie Team</p>
         </div>
       `
