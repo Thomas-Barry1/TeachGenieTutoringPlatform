@@ -142,7 +142,9 @@ function AuthCallbackPage() {
         if (next) {
           router.push(next)
         } else {
-          router.push('/dashboard')
+          // Force a full page reload for OAuth to ensure auth state is properly updated
+          // This fixes the issue where navigation doesn't recognize authenticated state
+          window.location.replace('/dashboard')
         }
 
       } catch (err) {
