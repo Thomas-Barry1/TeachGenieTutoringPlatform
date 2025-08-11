@@ -205,8 +205,8 @@ export default function Home() {
             ))}
           </div>
 
-          {/* What students achieve */}
-          <div className="text-center">
+          {/* What students achieve/ hidden for small screens*/}
+          <div className="text-center hidden md:block">
             <div className="inline-flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-8 bg-white rounded-2xl px-4 sm:px-8 py-6 shadow-lg">
               <div className="text-center">
                 <div className="text-3xl sm:text-3xl font-bold text-pink-600">Confidence</div>
