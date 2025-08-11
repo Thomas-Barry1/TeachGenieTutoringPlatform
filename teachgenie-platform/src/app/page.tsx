@@ -46,7 +46,7 @@ export default function Home() {
                   </span>
                 </div>
                 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-gray-900 mb-6">
+                <h1 className="text-5xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight text-gray-900 mb-6">
                     <span className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 bg-clip-text text-transparent leading-relaxed drop-shadow-sm">
                       Learn from the
                     </span>
@@ -160,10 +160,6 @@ export default function Home() {
             {testimonials.map((testimonial, index) => (
               <div key={testimonial.name} className="relative group">
                 <div className="bg-white rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform group-hover:-translate-y-2 border border-gray-100 h-full flex flex-col">
-                  {/* Quote icon */}
-                  <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-white text-2xl font-serif">&ldquo;</span>
-                  </div>
                   
                   {/* Rating */}
                   <div className="flex items-center mb-6 mt-4">
@@ -177,7 +173,9 @@ export default function Home() {
                   
                   {/* Content */}
                   <p className="text-gray-700 mb-6 italic text-lg leading-relaxed flex-grow">
-                    {testimonial.content}&rdquo;
+                    <span className="text-2xl font-serif text-primary-600">&ldquo;</span>
+                    {testimonial.content}
+                    <span className="text-2xl font-serif text-primary-600">&rdquo;</span>
                   </p>
                   
                   {/* Author */}
@@ -211,18 +209,18 @@ export default function Home() {
           <div className="text-center">
             <div className="inline-flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-8 bg-white rounded-2xl px-4 sm:px-8 py-6 shadow-lg">
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-pink-600">Confidence</div>
-                <div className="text-sm text-gray-600">Building</div>
+                <div className="text-3xl sm:text-3xl font-bold text-pink-600">Confidence</div>
+                <div className="text-base sm:text-sm text-gray-600">Building</div>
               </div>
               <div className="hidden sm:block w-px h-12 bg-gray-200"></div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-pink-600">Understanding</div>
-                <div className="text-sm text-gray-600">Deep Learning</div>
+                <div className="text-3xl sm:text-3xl font-bold text-pink-600">Understanding</div>
+                <div className="text-base sm:text-sm text-gray-600">Deep Learning</div>
               </div>
               <div className="hidden sm:block w-px h-12 bg-gray-200"></div>
               <div className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-pink-600">Progress</div>
-                <div className="text-sm text-gray-600">Measurable Results</div>
+                <div className="text-3xl sm:text-3xl font-bold text-pink-600">Progress</div>
+                <div className="text-base sm:text-sm text-gray-600">Measurable Results</div>
               </div>
             </div>
           </div>
