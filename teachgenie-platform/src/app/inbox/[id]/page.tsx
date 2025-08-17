@@ -666,7 +666,7 @@ export default function ConversationPage() {
                         <option value="60">1 hour</option>
                         <option value="90">1.5 hours</option>
                         <option value="120">2 hours</option>
-                        <option value="custom">Custom duration</option>
+                        {/* <option value="custom">Custom duration</option> */}
                       </select>
                       {customDuration !== '' && (
                         <div className="flex items-center space-x-2">
