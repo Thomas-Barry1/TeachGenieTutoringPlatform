@@ -399,7 +399,7 @@ async function send24HourSessionReminders(supabase: any) {
                       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
                         <tr>
                           <td align="center">
-                            <a href="https://teachgenie.io" style="
+                            <a href="https://teachgenie.io/sessions" style="
                               display: inline-block;
                               background-color: #667eea;
                               color: #ffffff;
@@ -408,7 +408,7 @@ async function send24HourSessionReminders(supabase: any) {
                               border-radius: 8px;
                               font-weight: 600;
                               font-size: 16px;
-                            ">🚀 Manage Sessions</a>
+                            ">📚 Manage Sessions</a>
                           </td>
                         </tr>
                       </table>
@@ -601,7 +601,7 @@ async function send24HourSessionReminders(supabase: any) {
                       <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin: 20px 0;">
                         <tr>
                           <td align="center">
-                            <a href="https://teachgenie.io" style="
+                            <a href="https://teachgenie.io/sessions" style="
                               display: inline-block;
                               background-color: #667eea;
                               color: #ffffff;
