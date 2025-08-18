@@ -167,16 +167,17 @@ export default function TutorsPage() {
           }
         }))
         
-        // Sort tutors by: 1) Has ratings (tutors with reviews first), 2) Price (cheapest first)
+        // Sort tutors by: 1) Star rating (highest first), 2) Price (cheapest first)
         const sortedTutors = transformedTutors.sort((a, b) => {
-          const aHasRatings = summaries[a.id] && summaries[a.id].count > 0
-          const bHasRatings = summaries[b.id] && summaries[b.id].count > 0
+          const aRating = summaries[a.id]?.avg || 0
+          const bRating = summaries[b.id]?.avg || 0
           
-          // First priority: Tutors with ratings come first
-          if (aHasRatings && !bHasRatings) return -1
-          if (!aHasRatings && bHasRatings) return 1
+          // First priority: Higher star ratings come first
+          if (aRating !== bRating) {
+            return bRating - aRating // Higher ratings first (descending)
+          }
           
-          // Second priority: If both have ratings or both don't have ratings, sort by price
+          // Second priority: If ratings are the same, sort by price (cheapest first)
           const aPrice = a.hourly_rate || 0
           const bPrice = b.hourly_rate || 0
           
