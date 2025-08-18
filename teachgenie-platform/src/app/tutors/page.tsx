@@ -132,7 +132,6 @@ export default function TutorsPage() {
             ...tutor,
             subjects: tutor.subjects?.map((s: any) => s.subject) || []
           }))
-        setTutors(transformedTutors)
         
         // Fetch review data for each tutor (combines platform and external reviews)
         // This is needed for the rating filter functionality
@@ -167,6 +166,31 @@ export default function TutorsPage() {
             summaries[tutor.id] = { avg: 0, count: 0 }
           }
         }))
+        
+        // Sort tutors by: 1) Has ratings (tutors with reviews first), 2) Price (cheapest first)
+        const sortedTutors = transformedTutors.sort((a, b) => {
+          const aHasRatings = summaries[a.id] && summaries[a.id].count > 0
+          const bHasRatings = summaries[b.id] && summaries[b.id].count > 0
+          
+          // First priority: Tutors with ratings come first
+          if (aHasRatings && !bHasRatings) return -1
+          if (!aHasRatings && bHasRatings) return 1
+          
+          // Second priority: If both have ratings or both don't have ratings, sort by price
+          const aPrice = a.hourly_rate || 0
+          const bPrice = b.hourly_rate || 0
+          
+          if (aPrice !== bPrice) {
+            return aPrice - bPrice // Cheapest first
+          }
+          
+          // Third priority: If prices are the same, sort alphabetically by first name
+          const aFirstName = a.profile?.first_name || ''
+          const bFirstName = b.profile?.first_name || ''
+          return aFirstName.localeCompare(bFirstName)
+        })
+        
+        setTutors(sortedTutors)
         setReviewsSummary(summaries)
         setLoading(false)
       })
