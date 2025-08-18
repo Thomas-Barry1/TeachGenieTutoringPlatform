@@ -199,7 +199,26 @@ function InboxPage() {
 
     try {
       console.log('Attempting to send message');
-      // First check if a chat room already exists between these users
+
+      // Check if both users are tutors (prevent tutor-to-tutor messaging)
+      const { data: userProfiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, user_type')
+      .in('id', [currentUserId, recipientId]);
+      
+      if (profilesError) {
+        console.error('Error fetching user profiles:', profilesError);
+        setError('Error fetching user information');
+        return;
+      }
+      
+      // Prevent tutors from messaging other tutors
+      if (userProfiles?.every(profile => profile.user_type === 'tutor')) {
+        setError('Tutors cannot message other tutors. Please contact students only.');
+        return;
+      }
+      
+      // Check if this is a new chat room creation
       const { data: existingRooms, error: searchError } = await supabase
         .from('chat_rooms')
         .select(`
@@ -231,6 +250,7 @@ function InboxPage() {
         chatRoomId = existingRoom.id;
       } else {
         console.log('No existing room found, creating new chat room');
+        
         // Create new chat room
         const { data: newRoom, error: roomError } = await supabase
           .from('chat_rooms')
