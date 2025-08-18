@@ -17,7 +17,7 @@ CREATE TABLE public.profiles (
 CREATE TABLE public.tutor_profiles (
   id UUID REFERENCES public.profiles ON DELETE CASCADE,
   bio TEXT,
-  hourly_rate DECIMAL CHECK (hourly_rate > 0),
+  hourly_rate DECIMAL CHECK (hourly_rate >= 10), -- Minimum rate of $10 per hour
   is_verified BOOLEAN DEFAULT false,
   stripe_account_id TEXT,
   PRIMARY KEY (id)

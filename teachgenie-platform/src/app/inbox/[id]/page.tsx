@@ -466,6 +466,12 @@ export default function ConversationPage() {
     e.preventDefault();
     if (!currentUserId || !otherParticipant || !bookingDate || !bookingTime || !bookingSubject) return;
 
+    // Validate hourly rate is at least $10
+    if (bookingRate < 10) {
+      setError('Hourly rate must be at least $10. Please enter a different rate.');
+      return;
+    }
+
     try {
       const startTime = new Date(`${bookingDate}T${bookingTime}`);
       const duration = customDuration ? parseInt(customDuration) : bookingDuration;
@@ -690,8 +696,8 @@ export default function ConversationPage() {
                       type="number"
                       value={bookingRate}
                       onChange={(e) => setBookingRate(Number(e.target.value))}
-                      min="0"
-                      step="0.01"
+                      min="10"
+                      step="1"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                       required
                     />

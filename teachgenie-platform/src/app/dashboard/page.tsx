@@ -112,12 +112,19 @@ export default function DashboardPage() {
   const handleSaveProfile = async () => {
     if (!user || !tutorProfile) return
 
+    // Validate hourly rate is at least $10
+    const rate = parseFloat(editedRate)
+    if (rate < 10) {
+      alert('Hourly rate must be at least $10. Please enter a different rate.')
+      return
+    }
+
     const supabase = createClient()
     const { error } = await supabase
       .from('tutor_profiles')
       .update({
         bio: editedBio,
-        hourly_rate: parseFloat(editedRate) || null
+        hourly_rate: rate || null
       })
       .eq('id', user.id)
 
@@ -129,7 +136,7 @@ export default function DashboardPage() {
     setTutorProfile({
       ...tutorProfile,
       bio: editedBio,
-      hourly_rate: parseFloat(editedRate) || null
+      hourly_rate: rate || null
     })
     setIsEditing(false)
   }
@@ -335,8 +342,8 @@ export default function DashboardPage() {
                           onChange={(e) => setEditedRate(e.target.value)}
                           className="block w-full rounded-md border-gray-300 pl-7 pr-12 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                           placeholder="0.00"
-                          min="0"
-                          step="0.01"
+                          min="10"
+                          step="1"
                         />
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                           <span className="text-gray-500 sm:text-sm">/hr</span>
