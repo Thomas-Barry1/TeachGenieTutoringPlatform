@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function Footer() {
   const currentYear = new Date().getFullYear()
@@ -10,8 +11,14 @@ export default function Footer() {
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
+              <div className="w-8 h-8 flex items-center justify-center">
+                <Image
+                  src="/favicon/favicon.ico"
+                  alt="TeachGenie Logo"
+                  width={32}
+                  height={32}
+                  className="w-8 h-8"
+                />
               </div>
               <span className="text-xl font-bold text-gray-900">TeachGenie</span>
             </div>
