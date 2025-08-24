@@ -327,7 +327,7 @@ export default function Home() {
               <div key={subject.name} className="group relative h-full">
                 <div className="bg-gradient-to-br from-white via-[#05aaae]/10 to-[#214966]/5 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-2 border border-gray-200 h-full flex flex-col justify-center hover:border-[#05aaae]/30">
                   <div className="text-center">
-                    <div className="mx-auto flex items-center justify-center w-16 h-16 bg-[#214966] rounded-2xl mb-4 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                    <div className="mx-auto flex items-center justify-center w-16 h-16 bg-[#05aaae] rounded-2xl mb-4 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
                       <BookOpenIcon className="w-8 h-8 text-white" />
                     </div>
                     <h3 className="text-lg font-semibold text-[#214966] group-hover:text-[#05aaae] transition-colors duration-300">{subject.name}</h3>

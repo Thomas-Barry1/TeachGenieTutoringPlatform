@@ -33,6 +33,19 @@ const config: Config = {
           800: '#86198f',
           900: '#701a75',
         },
+        // New TeachGenie Theme Colors
+        teachgenie: {
+          deepBlue: '#214966',
+          orange: '#e38614',
+          teal: '#05aaae',
+          // Extended variations for flexibility
+          deepBlueLight: '#2a5a7a',
+          deepBlueDark: '#1a3d52',
+          orangeLight: '#f39c1f',
+          orangeDark: '#d17a12',
+          tealLight: '#0bb8bc',
+          tealDark: '#049a9e',
+        },
       },
     },
   },
