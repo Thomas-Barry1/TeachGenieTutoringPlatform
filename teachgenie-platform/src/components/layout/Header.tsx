@@ -72,8 +72,8 @@ export default function Header() {
             <div className="flex h-16 justify-between">
               <div className="flex">
                 <div className="flex flex-shrink-0 items-center">
-                  <Link href="/" className="text-2xl font-bold text-primary-600">
-                    TeachGenie
+                  <Link href="/">
+                    <img src="/logo.png" alt="TeachGenie Logo" className="h-16 max-h-full w-auto object-contain" />
                   </Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8 items-stretch">
