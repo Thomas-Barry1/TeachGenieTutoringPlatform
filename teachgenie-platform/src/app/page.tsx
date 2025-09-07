@@ -21,10 +21,14 @@ import {
   GlobeAltIcon,
   TrophyIcon
 } from '@heroicons/react/24/outline'
+import StructuredData, { serviceSchema, breadcrumbSchema, mainEntitySchema } from '@/components/StructuredData'
 
 export default function Home() {
   return (
     <div className="relative min-h-screen">
+      <StructuredData data={serviceSchema} />
+      <StructuredData data={breadcrumbSchema} />
+      <StructuredData data={mainEntitySchema} />
       {/* Hero Section with New Color Scheme */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-teal-50">
         {/* Animated background elements */}
