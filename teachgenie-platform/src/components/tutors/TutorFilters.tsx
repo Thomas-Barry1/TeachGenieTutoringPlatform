@@ -18,6 +18,7 @@ interface TutorFiltersProps {
   filteredCount: number
   totalCount: number
   onClearFilters: () => void
+  isLoading?: boolean
 }
 
 export default function TutorFilters({
@@ -32,7 +33,8 @@ export default function TutorFilters({
   availableSubjects,
   filteredCount,
   totalCount,
-  onClearFilters
+  onClearFilters,
+  isLoading = false
 }: TutorFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -52,7 +54,8 @@ export default function TutorFilters({
               placeholder="Search tutors by name, bio, or subjects..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              disabled={isLoading}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
@@ -73,71 +76,69 @@ export default function TutorFilters({
         </button>
       </div>
 
-      {/* Advanced filters */}
-      {isExpanded && (
-        <div className="space-y-4 border-t border-gray-200 pt-4">
-          {/* Filters grid - Stack on mobile, 3 columns on larger screens */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Subject Filter */}
-            <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
-                Subject
-              </label>
-              <select
-                id="subject"
-                value={selectedSubject}
-                onChange={(e) => setSelectedSubject(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="">All Subjects</option>
-                {availableSubjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* Advanced filters - Always render to prevent CLS */}
+      <div className={`space-y-4 border-t border-gray-200 pt-4 transition-all duration-300 ${isExpanded ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0 overflow-hidden'}`}>
+        {/* Filters grid - Stack on mobile, 3 columns on larger screens */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Subject Filter */}
+          <div>
+            <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+              Subject
+            </label>
+            <select
+              id="subject"
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">All Subjects</option>
+              {availableSubjects.map((subject) => (
+                <option key={subject.id} value={subject.id}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Price Range Filter */}
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                Price Range
-              </label>
-              <select
-                id="price"
-                value={priceRange}
-                onChange={(e) => setPriceRange(e.target.value as PriceRange)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="all">All Prices</option>
-                <option value="under-25">Under $25</option>
-                <option value="25-50">$25-$50</option>
-                <option value="50-75">$50-$75</option>
-                <option value="75-100">$75-$100</option>
-                <option value="over-100">Over $100</option>
-              </select>
-            </div>
+          {/* Price Range Filter */}
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+              Price Range
+            </label>
+            <select
+              id="price"
+              value={priceRange}
+              onChange={(e) => setPriceRange(e.target.value as PriceRange)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="all">All Prices</option>
+              <option value="under-25">Under $25</option>
+              <option value="25-50">$25-$50</option>
+              <option value="50-75">$50-$75</option>
+              <option value="75-100">$75-$100</option>
+              <option value="over-100">Over $100</option>
+            </select>
+          </div>
 
-            {/* Rating Filter */}
-            <div>
-              <label htmlFor="rating" className="block text-sm font-medium text-gray-700 mb-1">
-                Rating
-              </label>
-              <select
-                id="rating"
-                value={ratingFilter}
-                onChange={(e) => setRatingFilter(e.target.value as RatingFilter)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                <option value="all">All Ratings</option>
-                <option value="4-plus">4+ Stars</option>
-                <option value="4.5-plus">4.5+ Stars</option>
-                <option value="5-star">5 Stars Only</option>
-              </select>
-            </div>
+          {/* Rating Filter */}
+          <div>
+            <label htmlFor="rating" className="block text-sm font-medium text-gray-700 mb-1">
+              Rating
+            </label>
+            <select
+              id="rating"
+              value={ratingFilter}
+              onChange={(e) => setRatingFilter(e.target.value as RatingFilter)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="all">All Ratings</option>
+              <option value="4-plus">4+ Stars</option>
+              <option value="4.5-plus">4.5+ Stars</option>
+              <option value="5-star">5 Stars Only</option>
+            </select>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Filter summary and clear button */}
       <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center pt-4 border-t border-gray-200 space-y-2 sm:space-y-0">

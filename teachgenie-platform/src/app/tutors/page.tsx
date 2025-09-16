@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import TutorFilters from '@/components/tutors/TutorFilters'
 import TutorPagination from '@/components/tutors/TutorPagination'
+import TutorCardSkeleton from '@/components/tutors/TutorCardSkeleton'
 import type { Database } from '@/types/database'
 
 type Profile = Database['public']['Tables']['profiles']['Row'] & {
@@ -69,6 +70,7 @@ export default function TutorsPage() {
   
   // Filter states - these control what tutors are displayed
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [selectedSubject, setSelectedSubject] = useState<string>('')
   const [priceRange, setPriceRange] = useState<PriceRange>('all')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>('all')
@@ -81,120 +83,156 @@ export default function TutorsPage() {
   const [subjects, setSubjects] = useState<Database['public']['Tables']['subjects']['Row'][]>([])
   const [reviewsSummary, setReviewsSummary] = useState<Record<string, { avg: number, count: number }>>({})
 
+  // Debounce search query to improve performance
   useEffect(() => {
-    const supabase = createClient()
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300) // 300ms delay
 
-    // Fetch all available subjects for the subject filter dropdown
-    supabase
-      .from('subjects')
-      .select('*')
-      .order('name')
-      .then(({ data: subjectsData, error: subjectsError }) => {
-        if (subjectsError) {
-          console.error('Error fetching subjects:', subjectsError)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient()
+      
+      try {
+        // Fetch subjects and tutors in parallel for better performance
+        const [subjectsResult, tutorsResult] = await Promise.allSettled([
+          supabase
+            .from('subjects')
+            .select('*')
+            .order('name'),
+          supabase
+            .from('tutor_profiles')
+            .select(`
+              *,
+              profile:profiles(*),
+              subjects:tutor_subjects(
+                subject:subjects(*)
+              )
+            `)
+            .eq('is_verified', true)
+        ])
+
+        // Handle subjects result
+        if (subjectsResult.status === 'fulfilled') {
+          const { data: subjectsData, error: subjectsError } = subjectsResult.value
+          if (subjectsError) {
+            console.error('Error fetching subjects:', subjectsError)
+            setError('Failed to load subjects')
+          } else if (subjectsData) {
+            setSubjects(subjectsData)
+          }
+        } else {
+          console.error('Subjects fetch failed:', subjectsResult.reason)
           setError('Failed to load subjects')
-          return
-        }
-        if (subjectsData) {
-          setSubjects(subjectsData)
-        }
-      })
-
-    // Fetch all verified tutors with their profiles and subjects
-    // This loads the complete dataset for client-side filtering
-    supabase
-      .from('tutor_profiles')
-      .select(`
-        *,
-        profile:profiles(*),
-        subjects:tutor_subjects(
-          subject:subjects(*)
-        )
-      `)
-      .eq('is_verified', true) // Only show verified tutors
-      .then(async ({ data: tutorsData, error: tutorsError }) => {
-        if (tutorsError) {
-          console.error('Error fetching tutors:', tutorsError)
-          setError('Failed to load tutors')
-          return
         }
 
-        if (!tutorsData) {
-          setTutors([])
-          setLoading(false)
-          return
-        }
-
-        // Transform the nested data structure to match our Tutor type
-        const transformedTutors = tutorsData
-          .filter(tutor => tutor.profile !== null) // Filter out tutors without profiles
-          .map(tutor => ({
-            ...tutor,
-            subjects: tutor.subjects?.map((s: any) => s.subject) || []
-          }))
-        
-        // Fetch review data for each tutor (combines platform and external reviews)
-        // This is needed for the rating filter functionality
-        const summaries: Record<string, { avg: number, count: number }> = {}
-        await Promise.all(transformedTutors.map(async (tutor) => {
-          // Fetch platform reviews from our database
-          const { data: platformReviews, error: platformReviewsError } = await supabase
-            .from('reviews')
-            .select('rating')
-            .eq('tutor_id', tutor.id)
+        // Handle tutors result
+        if (tutorsResult.status === 'fulfilled') {
+          const { data: tutorsData, error: tutorsError } = tutorsResult.value
           
-          // Fetch external reviews (from other platforms like Google, Yelp, etc.)
-          const { data: externalReviews, error: externalReviewsError } = await supabase
-            .from('external_reviews')
-            .select('rating')
-            .eq('tutor_id', tutor.id)
+          if (tutorsError) {
+            console.error('Error fetching tutors:', tutorsError)
+            setError('Failed to load tutors')
+            setLoading(false)
+            return
+          }
+
+          if (!tutorsData || tutorsData.length === 0) {
+            setTutors([])
+            setLoading(false)
+            return
+          }
+
+          // Transform the nested data structure to match our Tutor type
+          const transformedTutors = tutorsData
+            .filter(tutor => tutor.profile !== null) // Filter out tutors without profiles
+            .map(tutor => ({
+              ...tutor,
+              subjects: tutor.subjects?.map((s: any) => s.subject).filter(Boolean) || []
+            }))
           
-          if (!platformReviewsError && !externalReviewsError) {
-            // Combine all reviews and calculate average rating
-            const allReviews = [
-              ...(platformReviews || []),
-              ...(externalReviews || [])
-            ]
+          // Fetch review data in batches to avoid overwhelming the database
+          const summaries: Record<string, { avg: number, count: number }> = {}
+          const batchSize = 10
+          
+          for (let i = 0; i < transformedTutors.length; i += batchSize) {
+            const batch = transformedTutors.slice(i, i + batchSize)
             
-            if (allReviews.length > 0) {
-              const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
-              summaries[tutor.id] = { avg, count: allReviews.length }
-            } else {
-              summaries[tutor.id] = { avg: 0, count: 0 }
+            await Promise.all(batch.map(async (tutor) => {
+              try {
+                // Fetch both review types in parallel
+                const [platformReviewsResult, externalReviewsResult] = await Promise.allSettled([
+                  supabase
+                    .from('reviews')
+                    .select('rating')
+                    .eq('tutor_id', tutor.id),
+                  supabase
+                    .from('external_reviews')
+                    .select('rating')
+                    .eq('tutor_id', tutor.id)
+                ])
+
+                const platformReviews = platformReviewsResult.status === 'fulfilled' ? platformReviewsResult.value.data || [] : []
+                const externalReviews = externalReviewsResult.status === 'fulfilled' ? externalReviewsResult.value.data || [] : []
+                
+                // Combine all reviews and calculate average rating
+                const allReviews = [...platformReviews, ...externalReviews]
+                
+                if (allReviews.length > 0) {
+                  const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+                  summaries[tutor.id] = { avg, count: allReviews.length }
+                } else {
+                  summaries[tutor.id] = { avg: 0, count: 0 }
+                }
+              } catch (error) {
+                console.error(`Error fetching reviews for tutor ${tutor.id}:`, error)
+                summaries[tutor.id] = { avg: 0, count: 0 }
+              }
+            }))
+          }
+          
+          // Sort tutors by: 1) Star rating (highest first), 2) Price (cheapest first)
+          const sortedTutors = transformedTutors.sort((a, b) => {
+            const aRating = summaries[a.id]?.avg || 0
+            const bRating = summaries[b.id]?.avg || 0
+            
+            // First priority: Higher star ratings come first
+            if (aRating !== bRating) {
+              return bRating - aRating // Higher ratings first (descending)
             }
-          } else {
-            summaries[tutor.id] = { avg: 0, count: 0 }
-          }
-        }))
-        
-        // Sort tutors by: 1) Star rating (highest first), 2) Price (cheapest first)
-        const sortedTutors = transformedTutors.sort((a, b) => {
-          const aRating = summaries[a.id]?.avg || 0
-          const bRating = summaries[b.id]?.avg || 0
+            
+            // Second priority: If ratings are the same, sort by price (cheapest first)
+            const aPrice = a.hourly_rate || 0
+            const bPrice = b.hourly_rate || 0
+            
+            if (aPrice !== bPrice) {
+              return aPrice - bPrice // Cheapest first
+            }
+            
+            // Third priority: If prices are the same, sort alphabetically by first name
+            const aFirstName = a.profile?.first_name || ''
+            const bFirstName = b.profile?.first_name || ''
+            return aFirstName.localeCompare(bFirstName)
+          })
           
-          // First priority: Higher star ratings come first
-          if (aRating !== bRating) {
-            return bRating - aRating // Higher ratings first (descending)
-          }
-          
-          // Second priority: If ratings are the same, sort by price (cheapest first)
-          const aPrice = a.hourly_rate || 0
-          const bPrice = b.hourly_rate || 0
-          
-          if (aPrice !== bPrice) {
-            return aPrice - bPrice // Cheapest first
-          }
-          
-          // Third priority: If prices are the same, sort alphabetically by first name
-          const aFirstName = a.profile?.first_name || ''
-          const bFirstName = b.profile?.first_name || ''
-          return aFirstName.localeCompare(bFirstName)
-        })
-        
-        setTutors(sortedTutors)
-        setReviewsSummary(summaries)
+          setTutors(sortedTutors)
+          setReviewsSummary(summaries)
+        } else {
+          console.error('Tutors fetch failed:', tutorsResult.reason)
+          setError('Failed to load tutors')
+        }
+      } catch (error) {
+        console.error('Unexpected error:', error)
+        setError('An unexpected error occurred while loading data')
+      } finally {
         setLoading(false)
-      })
+      }
+    }
+
+    fetchData()
   }, [])
 
   // Memoized filtering logic - recalculates only when dependencies change
@@ -202,9 +240,9 @@ export default function TutorsPage() {
   const filteredTutors = useMemo(() => {
     let filtered = tutors
 
-    // Text search across multiple fields (name, bio, subjects)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
+    // Text search across multiple fields (name, bio, subjects) - using debounced query
+    if (debouncedSearchQuery.trim()) {
+      const query = debouncedSearchQuery.toLowerCase()
       filtered = filtered.filter(tutor => {
         if (!tutor.profile) return false
         
@@ -267,7 +305,7 @@ export default function TutorsPage() {
     }
 
     return filtered
-  }, [tutors, searchQuery, selectedSubject, priceRange, ratingFilter, reviewsSummary])
+  }, [tutors, debouncedSearchQuery, selectedSubject, priceRange, ratingFilter, reviewsSummary])
 
   // Pagination logic - slice the filtered results to show current page
   const totalPages = Math.ceil(filteredTutors.length / tutorsPerPage)
@@ -280,20 +318,31 @@ export default function TutorsPage() {
   // This prevents users from being on an empty page after filtering
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, selectedSubject, priceRange, ratingFilter])
+  }, [debouncedSearchQuery, selectedSubject, priceRange, ratingFilter])
 
   // Clear all active filters and return to initial state
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchQuery('')
     setSelectedSubject('')
     setPriceRange('all')
     setRatingFilter('all')
-  }
+  }, [])
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="space-y-8">
+        {/* Skeleton for filters */}
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-8 animate-pulse">
+          <div className="h-12 bg-gray-200 rounded-lg mb-4"></div>
+          <div className="h-6 bg-gray-200 rounded w-32"></div>
+        </div>
+        
+        {/* Skeleton for tutor cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <TutorCardSkeleton key={index} />
+          ))}
+        </div>
       </div>
     )
   }
@@ -323,6 +372,7 @@ export default function TutorsPage() {
         filteredCount={filteredTutors.length}
         totalCount={tutors.length}
         onClearFilters={clearFilters}
+        isLoading={loading}
       />
 
       {/* Tutors Grid - displays the current page of filtered tutors */}
@@ -335,12 +385,15 @@ export default function TutorsPage() {
             <div className="p-6 flex flex-col h-full">
               {/* Tutor Header - Avatar, Name, Rate, and Rating */}
               <div className="flex items-center space-x-4">
-                <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-200">
+                <div className="h-16 w-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                   {tutor.profile?.avatar_url ? (
                     <img
                       src={tutor.profile.avatar_url}
                       alt={`${tutor.profile.first_name} ${tutor.profile.last_name}`}
                       className="h-full w-full object-cover"
+                      width={64}
+                      height={64}
+                      loading="lazy"
                     />
                   ) : (
                     <div className="h-full w-full flex items-center justify-center text-gray-400">
@@ -348,8 +401,8 @@ export default function TutorsPage() {
                     </div>
                   )}
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-semibold truncate">
                     {tutor.profile?.first_name} {tutor.profile?.last_name}
                   </h3>
                   {/* Star Rating Display */}
@@ -446,4 +499,4 @@ export default function TutorsPage() {
       />
     </div>
   )
-} 
+}
