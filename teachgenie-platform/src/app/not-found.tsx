@@ -19,8 +19,8 @@ export default function NotFound() {
               Oops! Page Not Found
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-              The page you're looking for seems to have wandered off into the digital void. 
-              Don't worry, even the best tutors sometimes need to find their way back!
+              The page you&apos;re looking for seems to have wandered off into the digital void. 
+              Don&apos;t worry, even the best tutors sometimes need to find their way back!
             </p>
           </div>
 
@@ -112,11 +112,11 @@ export default function NotFound() {
           {/* Help Text */}
           <div className="mt-12 p-6 bg-teachgenie-teal/10 rounded-2xl border border-teachgenie-teal/20">
             <p className="text-gray-600">
-              Still can't find what you're looking for? 
+              Still can&apos;t find what you&apos;re looking for? 
               <Link href="/contact" className="text-teachgenie-orange hover:text-teachgenie-orange-dark font-medium ml-1">
                 Contact our support team
               </Link>
-              {' '}and we'll help you get back on track!
+              {' '}and we&apos;ll help you get back on track!
             </p>
           </div>
         </div>
