@@ -533,7 +533,7 @@ export default function Header() {
                 <div className="space-y-1">
                   <Disclosure.Button
                     as={Link}
-                    href="/settings"
+                    href="/dashboard"
                     className="block px-4 py-2 text-base font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-800"
                   >
                     Settings
