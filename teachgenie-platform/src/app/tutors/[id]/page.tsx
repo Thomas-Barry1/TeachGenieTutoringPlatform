@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { formatPriceRange } from '@/lib/priceUtils'
 import type { Database } from '@/types/database'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -145,7 +146,7 @@ export default function TutorProfilePage() {
               {tutor.profile.first_name} {tutor.profile.last_name}
             </h1>
             <p className="text-gray-600 mt-1">
-              {tutor.hourly_rate ? `$${tutor.hourly_rate}/hour` : 'Rate not set'}
+              {formatPriceRange(tutor.hourly_rate) || 'Rate not set'}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {tutor.subjects.map(subject => (

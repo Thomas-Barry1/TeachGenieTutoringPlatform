@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import TutorFilters from '@/components/tutors/TutorFilters'
 import TutorPagination from '@/components/tutors/TutorPagination'
 import TutorCardSkeleton from '@/components/tutors/TutorCardSkeleton'
+import { formatPriceRange } from '@/lib/priceUtils'
 import type { Database } from '@/types/database'
 
 type Profile = Database['public']['Tables']['profiles']['Row'] & {
@@ -431,7 +432,7 @@ export default function TutorsPage() {
                     )}
                   </div>
                   <p className="text-gray-600">
-                    {tutor.hourly_rate ? `$${tutor.hourly_rate}/hour` : 'Rate not set'}
+                    {formatPriceRange(tutor.hourly_rate) || 'Rate not set'}
                   </p>
                 </div>
               </div>
