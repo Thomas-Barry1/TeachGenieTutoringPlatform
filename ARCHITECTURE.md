@@ -128,6 +128,12 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
     - Tracks unread messages
     - Manages notification preferences
 
+12. `user_info`
+    - Stores user preferences and learning data on users for AI tutors or tools
+    - Category array allows for easier searchability and categorization
+    - Tracks learning styles, interests, goals, and personality traits
+    - Includes confidence scores for AI-driven data collection
+
 ## Security & Access Control
 
 ### Row Level Security (RLS)
@@ -141,6 +147,7 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 - **Subjects**: Public read, admin-only write
 - **Sessions**: Users view own sessions, only tutors create sessions
 - **Chat**: Users access only their chat rooms and messages
+- **User Info**: Users manage their own preferences
 
 ## Session Management
 
@@ -296,6 +303,24 @@ profile-images/
 - **Processing**: Image optimization pipeline with automatic resizing
 - **Security**: Signed URLs with expiration, CORS configuration, rate limiting
 - **Performance**: Lazy loading, progressive loading, browser caching
+
+## User Information Management
+
+### Overview
+Flexible system for storing and managing user preferences, learning styles, and personalization data for AI tutors and matching algorithms.
+
+### Database Schema
+- **Table**: `user_info`
+- **Structure**: Key-value pairs with category arrays for flexible categorization
+- **Categories**: Learning styles, interests, goals, personality traits, subject preferences
+- **Data Sources**: User input, AI inference, behavioral analysis
+
+### Use Cases
+1. **AI Tutor Personalization**: Adapt teaching methods based on learning style
+2. **Tutor Matching**: Match students with compatible tutors
+3. **Content Recommendation**: Suggest relevant study materials
+4. **Progress Tracking**: Monitor learning preferences over time
+5. **Behavioral Analysis**: Infer preferences from user interactions
 
 ## AI Tutors Tools
 

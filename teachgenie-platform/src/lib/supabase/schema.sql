@@ -144,6 +144,17 @@ CREATE TABLE public.external_reviews (
   PRIMARY KEY (id)
 );
 
+-- User information for AI tutors and personalization
+CREATE TABLE public.user_info (
+  id UUID DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES public.profiles ON DELETE CASCADE,
+  category TEXT[] NOT NULL, -- Array of categories like ['learning_style', 'interests', 'goals']
+  confidence_score DECIMAL(3,2) DEFAULT 1.0 CHECK (confidence_score >= 0.0 AND confidence_score <= 1.0),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  PRIMARY KEY (id)
+);
+
 -- Performance Indexes (Speed up common queries)
 CREATE INDEX IF NOT EXISTS idx_sessions_tutor_id ON public.sessions(tutor_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_student_id ON public.sessions(student_id);
@@ -167,6 +178,11 @@ CREATE INDEX IF NOT EXISTS idx_external_reviews_created_at ON public.external_re
 CREATE INDEX IF NOT EXISTS idx_session_notifications_session_id ON public.session_notifications(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_notifications_user_id ON public.session_notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_session_notifications_sent_at ON public.session_notifications(sent_at);
+-- Performance indexes for user_info
+CREATE INDEX IF NOT EXISTS idx_user_info_user_id ON public.user_info(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_info_category ON public.user_info USING GIN(category);
+CREATE INDEX IF NOT EXISTS idx_user_info_confidence ON public.user_info(confidence_score);
+
 
 -- Row Level Security (RLS) Policies
 
@@ -575,4 +591,9 @@ CREATE POLICY "Service role can manage session notifications"
 
 CREATE POLICY "Users can view their own notifications"
   ON public.session_notifications FOR SELECT
-  USING (auth.uid() = user_id); 
+  USING (auth.uid() = user_id);
+
+-- User info policies
+CREATE POLICY "Users can manage their own info"
+  ON public.user_info FOR ALL
+  USING (auth.uid() = user_id);
