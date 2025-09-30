@@ -91,6 +91,51 @@ export default function Header() {
                       {item.name}
                     </Link>
                   ))}
+                  {/* Free Student Tools Dropdown - Visible to everyone except tutors */}
+                  {!isTutor && (
+                    <Menu as="div" className="relative flex items-stretch">
+                      <MenuButton
+                        className={classNames(
+                          pathname.startsWith('/student-tools')
+                            ? 'border-primary-500 text-gray-900'
+                            : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                          'inline-flex items-center border-b-2 px-1 pt-1 text-sm font-medium h-full focus:outline-none bg-white'
+                        )}
+                        style={{ height: '100%' }}
+                      >
+                        <div className="flex items-center">
+                          <span>Free Student Tools</span>
+                        </div>
+                        <ChevronDownIcon className="ml-1 h-4 w-4" aria-hidden="true" />
+                      </MenuButton>
+                      <Transition
+                        as={Fragment}
+                        enter="transition ease-out duration-200"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <MenuItems className="absolute left-0 top-full z-10 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <MenuItem>
+                            {({ active }) => (
+                              <Link
+                                href="/student-tools/learning-style-quiz"
+                                className={classNames(
+                                  active ? 'bg-gray-100' : '',
+                                  'block px-4 py-2 text-sm text-gray-700'
+                                )}
+                              >
+                                Learning Style Quiz
+                              </Link>
+                            )}
+                          </MenuItem>
+                        </MenuItems>
+                      </Transition>
+                    </Menu>
+                  )}
+
                   {/* AI Tutors Tools Dropdown - Only for verified tutors */}
                   {isVerifiedTutor && (
                     <Menu as="div" className="relative flex items-stretch">
@@ -402,6 +447,28 @@ export default function Header() {
                 </Disclosure.Button>
               ))}
               
+              {/* Mobile Free Student Tools Menu - Visible to everyone except tutors */}
+              {!isTutor && (
+                <>
+                  <Disclosure.Button
+                    as="div"
+                    className="border-transparent text-gray-500 block border-l-4 py-2 pl-3 pr-4 text-base font-medium"
+                  >
+                    <div className="flex items-center text-sm font-medium text-gray-900 mb-2">
+                      <span>Free Student Tools</span>
+                    </div>
+                    <div className="space-y-1">
+                      <Link
+                        href="/student-tools/learning-style-quiz"
+                        className="block text-sm text-gray-600 hover:text-gray-900 pl-4"
+                      >
+                        Learning Style Quiz
+                      </Link>
+                    </div>
+                  </Disclosure.Button>
+                </>
+              )}
+
               {/* Mobile AI Tutors Tools Menu - Only for verified tutors */}
               {isVerifiedTutor && (
                 <>

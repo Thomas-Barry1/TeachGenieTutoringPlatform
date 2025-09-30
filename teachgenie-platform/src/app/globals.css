@@ -54,11 +54,11 @@
 
   /* TeachGenie Theme Color Utilities */
   .btn-teachgenie-primary {
-    @apply bg-gradient-to-r from-teachgenie-orange to-teachgenie-orange-light text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200;
+    @apply bg-gradient-to-r from-teachgenie-orange to-teachgenie-orangeLight text-white font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200;
   }
 
   .btn-teachgenie-secondary {
-    @apply bg-white text-teachgenie-deep-blue font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 border-2 border-teachgenie-teal hover:border-teachgenie-teal-light;
+    @apply bg-white text-teachgenie-deep-blue font-semibold rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 border-2 border-teachgenie-teal hover:border-teachgenie-tealLight;
   }
 
   .text-teachgenie-deep-blue {
