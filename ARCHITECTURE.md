@@ -133,6 +133,7 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
     - Category array allows for easier searchability and categorization
     - Tracks learning styles, interests, goals, and personality traits
     - Includes confidence scores for AI-driven data collection
+    - Uses JSONB data column for flexible, queryable storage of complex user information
     - Types of categories:
       - "learning_style" from learning style quiz and based on VARK questionnaire
 
@@ -314,6 +315,7 @@ Flexible system for storing and managing user preferences, learning styles, and 
 ### Database Schema
 - **Table**: `user_info`
 - **Structure**: Key-value pairs with category arrays for flexible categorization
+- **Data Storage**: JSONB column for complex, nested user data
 - **Categories**: Learning styles, interests, goals, personality traits, subject preferences
 - **Data Sources**: User input, AI inference, behavioral analysis
 

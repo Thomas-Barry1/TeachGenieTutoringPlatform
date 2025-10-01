@@ -340,6 +340,11 @@ export default function LearningStyleQuizPage() {
           user_id: user.id,
           category: ['learning_style'],
           confidence_score: index === 0 ? 1.0 : 0.8, // Primary gets 1.0, secondary gets 0.8
+          data: {
+            vark_type: style,
+            vark_name: VARK_DESCRIPTIONS[style].name,
+            all_scores: scores
+          }
         }))
 
         const { data, error } = await supabase

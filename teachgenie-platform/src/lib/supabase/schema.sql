@@ -150,6 +150,7 @@ CREATE TABLE public.user_info (
   user_id UUID REFERENCES public.profiles ON DELETE CASCADE,
   category TEXT[] NOT NULL, -- Array of categories like ['learning_style', 'interests', 'goals']
   confidence_score DECIMAL(3,2) DEFAULT 1.0 CHECK (confidence_score >= 0.0 AND confidence_score <= 1.0),
+  data JSONB, -- JSON data for storing learning style results, preferences, and other user information
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
   PRIMARY KEY (id)
@@ -182,6 +183,7 @@ CREATE INDEX IF NOT EXISTS idx_session_notifications_sent_at ON public.session_n
 CREATE INDEX IF NOT EXISTS idx_user_info_user_id ON public.user_info(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_info_category ON public.user_info USING GIN(category);
 CREATE INDEX IF NOT EXISTS idx_user_info_confidence ON public.user_info(confidence_score);
+CREATE INDEX IF NOT EXISTS idx_user_info_data ON public.user_info USING GIN(data);
 
 
 -- Row Level Security (RLS) Policies
