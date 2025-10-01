@@ -133,6 +133,8 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
     - Category array allows for easier searchability and categorization
     - Tracks learning styles, interests, goals, and personality traits
     - Includes confidence scores for AI-driven data collection
+    - Types of categories:
+      - "learning_style" from learning style quiz and based on VARK questionnaire
 
 ## Security & Access Control
 

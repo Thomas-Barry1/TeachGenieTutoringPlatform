@@ -66,9 +66,9 @@ describe('LearningStyleQuizPage', () => {
     render(<LearningStyleQuizPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Learning Style Quiz')).toBeInTheDocument()
+      expect(screen.getByText('VARK Learning Style Quiz')).toBeInTheDocument()
       expect(screen.getByText('Discover your unique learning style to optimize your study habits and find the perfect tutor match.')).toBeInTheDocument()
-      expect(screen.getByText('Quiz Coming Soon!')).toBeInTheDocument()
+      expect(screen.getByText('Question 1 of 16')).toBeInTheDocument()
     })
   })
 
@@ -82,9 +82,9 @@ describe('LearningStyleQuizPage', () => {
     render(<LearningStyleQuizPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('Learning Style Quiz')).toBeInTheDocument()
+      expect(screen.getByText('VARK Learning Style Quiz')).toBeInTheDocument()
       expect(screen.getByText('Discover your unique learning style to optimize your study habits and find the perfect tutor match.')).toBeInTheDocument()
-      expect(screen.getByText('Quiz Coming Soon!')).toBeInTheDocument()
+      expect(screen.getByText('Question 1 of 16')).toBeInTheDocument()
     })
 
     // Should not redirect tutors away

@@ -200,6 +200,7 @@ ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.message_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.external_reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.session_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_info ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies by table
 -- Profiles policies
