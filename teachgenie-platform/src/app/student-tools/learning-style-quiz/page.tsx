@@ -29,7 +29,7 @@ interface Question {
 const VARK_QUESTIONS: Question[] = [
   {
     id: 1,
-    text: "You are helping someone who wants to go to your airport, town center, or railway station. You would:",
+    text: "You are helping a friend who wants to go to your airport, town center, or railway station. You would:",
     options: [
       { text: "Go with them", type: 'K' },
       { text: "Tell them the directions", type: 'A' },
